@@ -1,0 +1,303 @@
+@import "tailwindcss";
+@source "../";
+
+/* ============================================
+   BACKPACK JUNCTION — DESIGN SYSTEM
+   Colors extracted from logo:
+   Navy Blue #1E2D4A / Burnt Orange #C67A3C / Cream #F5F0E8
+   ============================================ */
+
+@theme {
+  /* Primary — from logo */
+  --color-navy: #1E2D4A;
+  --color-navy-deep: #141F33;
+  --color-navy-light: #2A3F63;
+  --color-burnt-orange: #C67A3C;
+  --color-copper: #D4842A;
+  --color-copper-light: #E8A45C;
+  --color-cream: #F5F0E8;
+  --color-cream-dark: #E8DFD2;
+  --color-cream-light: #FBF8F3;
+
+  /* Supporting */
+  --color-slate: #3A4A5E;
+  --color-teal: #1ABC9C;
+  --color-midnight: #0C1420;
+  --color-charcoal: #1A2332;
+  --color-forest: #1B4332;
+  --color-sand: #C2B280;
+  --color-gold: #D4A843;
+
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* Tailwind v4 Preflight already resets margin/padding/box-sizing inside @layer base.
+   DO NOT add an un-layered * { margin:0 } reset here — it overrides ALL Tailwind utilities! */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-cream);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: rgba(198, 122, 60, 0.3);
+  color: #fff;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--color-midnight); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-navy), var(--color-burnt-orange));
+  border-radius: 10px;
+}
+
+/* ============================================
+   GLASSMORPHISM
+   ============================================ */
+.glass {
+  background: rgba(30, 45, 74, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+.glass-dark {
+  background: rgba(12, 20, 32, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(245, 240, 232, 0.06);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(30, 45, 74, 0.3) 0%, rgba(30, 45, 74, 0.1) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(245, 240, 232, 0.07);
+  border-radius: 20px;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.glass-card:hover {
+  background: linear-gradient(135deg, rgba(30, 45, 74, 0.45) 0%, rgba(30, 45, 74, 0.2) 100%);
+  border-color: rgba(198, 122, 60, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(198, 122, 60, 0.08);
+}
+
+/* ============================================
+   GRADIENT TEXT
+   ============================================ */
+.gradient-text {
+  background: linear-gradient(135deg, #C67A3C, #D4A843, #E8A45C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, #C67A3C, #D4842A, #E8A45C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-cool {
+  background: linear-gradient(135deg, #2A3F63, #1ABC9C, #C67A3C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
+.glow-orange {
+  box-shadow: 0 0 30px rgba(198, 122, 60, 0.2), 0 0 60px rgba(198, 122, 60, 0.1);
+}
+.glow-blue {
+  box-shadow: 0 0 30px rgba(30, 45, 74, 0.3), 0 0 60px rgba(30, 45, 74, 0.15);
+}
+.glow-teal {
+  box-shadow: 0 0 30px rgba(26, 188, 156, 0.2), 0 0 60px rgba(26, 188, 156, 0.1);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn-primary {
+  background: linear-gradient(135deg, #C67A3C, #D4842A);
+  color: white;
+  font-weight: 600;
+  padding: 14px 36px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #D4842A, #E8A45C);
+  opacity: 0;
+  transition: opacity 0.4s;
+  border-radius: inherit;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 40px rgba(198, 122, 60, 0.4);
+}
+.btn-primary:hover::before { opacity: 1; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-cream);
+  font-weight: 500;
+  padding: 14px 36px;
+  border-radius: 50px;
+  border: 1px solid rgba(245, 240, 232, 0.2);
+  cursor: pointer;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+  background: rgba(245, 240, 232, 0.08);
+  border-color: rgba(198, 122, 60, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   SECTION STYLES
+   ============================================ */
+.section-padding { padding: 120px 0; }
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  color: rgba(245, 240, 232, 0.45);
+  max-width: 600px;
+  line-height: 1.8;
+  font-weight: 400;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+/* Film grain */
+.film-grain::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  animation: grain 8s steps(10) infinite;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.4;
+}
+
+/* Splash screen */
+@keyframes logoReveal {
+  0% { opacity: 0; transform: scale(0.7); filter: blur(10px); }
+  40% { opacity: 1; transform: scale(1.05); filter: blur(0); }
+  60% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes taglineSlide {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splashFade {
+  0% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+/* Counter */
+.counter-value {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, #C67A3C, #D4A843);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Swiper */
+.swiper-pagination-bullet {
+  background: rgba(245, 240, 232, 0.3) !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+.swiper-pagination-bullet-active {
+  background: #C67A3C !important;
+  width: 30px !important;
+  border-radius: 5px !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .section-padding { padding: 80px 0; }
+  .btn-primary, .btn-secondary { padding: 12px 28px; font-size: 14px; }
+}
+@media (max-width: 480px) {
+  .section-padding { padding: 60px 0; }
+}
