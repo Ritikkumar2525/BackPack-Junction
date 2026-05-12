@@ -16,7 +16,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push(session?.user?.role === "admin" ? "/admin" : "/dashboard");
+      if (session?.user?.email === "junctionbackpack@gmail.com" || session?.user?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [status, session, router]);
 
@@ -38,14 +42,18 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError(result.error === "CredentialsSignin"
-          ? "Invalid email or password. Try demo@backpackjunction.com / adventure123"
+          ? "Invalid email or password. Please try again."
           : result.error
         );
       } else if (result?.ok) {
         const res = await fetch("/api/auth/session");
         const sess = await res.json();
-        router.push(sess?.user?.role === "admin" ? "/admin" : "/dashboard");
-        router.refresh();
+        
+        if (sess?.user?.email === "junctionbackpack@gmail.com" || sess?.user?.role === "admin") {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/dashboard";
+        }
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -187,12 +195,6 @@ export default function LoginPage() {
                   <Mountain size={14} className="text-burnt-orange" />
                   Phone OTP
                 </button>
-              </div>
-              
-              <div className="mt-5 p-2 rounded-md bg-burnt-orange/5 border border-burnt-orange/10 text-center">
-                <p className="text-cream/40 text-[10px]">
-                  <span className="font-semibold text-burnt-orange">Demo:</span> demo@backpackjunction.com / adventure123
-                </p>
               </div>
             </div>
             

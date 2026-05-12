@@ -394,7 +394,13 @@ export default function DestinationPage({ destination: dest }) {
                 <img
                   src={img}
                   alt={`${dest.name} gallery ${i + 1}`}
-                  className="w-full h-full object-cover min-h-[200px] transition-transform duration-700 group-hover:scale-110"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover min-h-[200px] transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400";
+                  }}
                 />
 
                 <div className="absolute inset-0 bg-midnight/0 group-hover:bg-midnight/30 transition-colors duration-300 flex items-center justify-center">

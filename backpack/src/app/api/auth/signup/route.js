@@ -30,11 +30,14 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
+    const role = email === 'junctionbackpack@gmail.com' ? 'admin' : 'user';
+
     const user = await User.create({
       name,
       email,
       phone,
       password: hashedPassword,
+      role
     });
 
     return NextResponse.json(

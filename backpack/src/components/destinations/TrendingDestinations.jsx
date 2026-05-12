@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
 import { MapPin, Clock, ArrowRight } from "lucide-react";
 import { destinations } from "@/data/destinations";
+import Image from "next/image";
 
 function DestinationCard({ dest, index }) {
   return (
@@ -19,12 +20,14 @@ function DestinationCard({ dest, index }) {
       }}
     >
       <Link href={`/destinations/${dest.id}`} className="block group">
-        <div className="relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer">
+        <div className="relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer bg-[#0C1420]">
           {/* Image */}
-          <img
+          <Image
             src={dest.image}
             alt={dest.name}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="absolute inset-0 object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
           />
 
           {/* Gradient overlay */}
@@ -82,17 +85,33 @@ function DestinationCard({ dest, index }) {
 export default function TrendingDestinations() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [allDestinations, setAllDestinations] = useState(destinations);
+
+  useEffect(() => {
+    async function fetchDestinations() {
+      try {
+        const res = await fetch("/api/destinations");
+        if (res.ok) {
+          const data = await res.json();
+          setAllDestinations(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch destinations:", err);
+      }
+    }
+    fetchDestinations();
+  }, []);
 
   return (
     <section id="destinations" className="py-32 relative overflow-hidden">
       {/* BG accents */}
       <div
-        className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-[200px] pointer-events-none"
-        style={{ background: "rgba(198,122,60,0.04)" }}
+        className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(198,122,60,0.06) 0%, transparent 70%)" }}
       />
       <div
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full blur-[180px] pointer-events-none"
-        style={{ background: "rgba(30,45,74,0.08)" }}
+        className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(30,45,74,0.15) 0%, transparent 70%)" }}
       />
 
       <div ref={ref} className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -129,7 +148,7 @@ export default function TrendingDestinations() {
 
         {/* Card Grid — 3 columns on desktop, 2 on tablet, 1 on mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {destinations.slice(0, 6).map((dest, i) => (
+          {allDestinations.slice(0, 6).map((dest, i) => (
             <DestinationCard key={dest.id} dest={dest} index={i} />
           ))}
         </div>

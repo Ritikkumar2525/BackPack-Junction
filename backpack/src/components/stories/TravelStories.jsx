@@ -98,18 +98,27 @@ export default function TravelStories() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-[3/4]"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ 
-                  delay: i * 0.08,
-                  y: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 } 
-                }}
+                transition={{ delay: i * 0.08 }}
                 onClick={() => setSelected(story._id)}
               >
-                <img
-                  src={story.image}
-                  alt={story.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+                {story.image && story.image.startsWith('data:video') ? (
+                  <video
+                    src={story.image}
+                    autoPlay loop muted playsInline
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <img
+                    src={story.image}
+                    alt={story.title}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=800";
+                    }}
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
                 {/* Bottom info */}
@@ -158,12 +167,24 @@ export default function TravelStories() {
               className="relative max-w-3xl w-full aspect-[3/4] md:aspect-video rounded-3xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={selectedStory.image}
-                alt={selectedStory.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              {selectedStory.image && selectedStory.image.startsWith('data:video') ? (
+                <video
+                  src={selectedStory.image}
+                  autoPlay loop playsInline controls
+                  className="w-full h-full object-contain bg-black/50"
+                />
+              ) : (
+                <img
+                  src={selectedStory.image}
+                  alt={selectedStory.title}
+                  className="w-full h-full object-cover bg-[#0C1420]"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1200&h=800";
+                  }}
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-8 left-8 right-8 flex items-end justify-between">
                 <div>
                   <h3 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-cream mb-1">

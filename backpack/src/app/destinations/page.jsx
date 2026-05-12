@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { destinations } from "@/data/destinations";
@@ -28,8 +28,24 @@ const difficultyColor = {
 export default function DestinationsPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [allDestinations, setAllDestinations] = useState(destinations);
 
-  const filtered = destinations.filter((d) => {
+  useEffect(() => {
+    async function fetchDestinations() {
+      try {
+        const res = await fetch("/api/destinations");
+        if (res.ok) {
+          const data = await res.json();
+          setAllDestinations(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch destinations:", err);
+      }
+    }
+    fetchDestinations();
+  }, []);
+
+  const filtered = allDestinations.filter((d) => {
     const matchesCategory =
       activeCategory === "All" || d.category.includes(activeCategory);
     const matchesSearch =
@@ -136,7 +152,11 @@ export default function DestinationsPage() {
                       <img
                         src={dest.image}
                         alt={dest.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400";
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 via-transparent to-transparent" />
                       <div className="absolute top-4 left-4">

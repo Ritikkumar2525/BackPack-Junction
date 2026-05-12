@@ -13,26 +13,26 @@ export default function BookingsPage() {
     fetch("/api/bookings").then(r => r.json()).then(d => { setBookings(d.bookings || []); setLoading(false); });
   }, []);
 
-  const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+  const filtered = filter === "all" ? bookings : bookings.filter(b => b.bookingStatus?.toLowerCase() === filter);
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-burnt-orange/30 border-t-burnt-orange rounded-full animate-spin" /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-cream">My Bookings</h1>
-          <p className="text-cream/35 text-sm mt-1">{bookings.length} total bookings</p>
+          <h1 className="font-[family-name:var(--font-heading)] text-xl sm:text-2xl font-bold text-cream">My Bookings</h1>
+          <p className="text-cream/35 text-xs sm:text-sm mt-1">{bookings.length} total bookings</p>
         </div>
-        <Link href="/dashboard/book-trip" className="btn-primary text-sm py-2.5 px-5"><span className="relative z-10 flex items-center gap-2"><MapPin size={14} /> Book New Trip</span></Link>
+        <Link href="/dashboard/book-trip" className="btn-primary text-xs sm:text-sm py-2 sm:py-2.5 px-4 sm:px-5 w-fit"><span className="relative z-10 flex items-center gap-2"><MapPin size={14} /> Book New Trip</span></Link>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2">
-        {["all", "confirmed", "pending", "cancelled"].map(f => (
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {["all", "confirmed", "pending", "cancellation requested", "cancelled"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${filter === f ? "bg-burnt-orange/20 text-burnt-orange border border-burnt-orange/30" : "text-cream/30 hover:text-cream/60 border border-cream/5"}`}>
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap ${filter === f ? "bg-burnt-orange/20 text-burnt-orange border border-burnt-orange/30" : "text-cream/30 hover:text-cream/60 border border-cream/5"}`}>
+            {f === "all" ? "All" : f.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
           </button>
         ))}
       </div>
@@ -46,28 +46,33 @@ export default function BookingsPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((b, i) => (
-            <motion.div key={b.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Link href={`/dashboard/bookings/${b.id}`}
-                className="glass-card p-5 flex items-center gap-5 hover:border-cream/10 transition-all group block">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-burnt-orange/20 to-burnt-orange/5 text-burnt-orange flex items-center justify-center flex-shrink-0">
-                  <MapPin size={22} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-cream font-medium truncate">{b.tripTitle}</p>
-                  <div className="flex items-center gap-4 mt-1.5 text-xs text-cream/30">
-                    <span className="flex items-center gap-1"><CalendarCheck size={12} /> {new Date(b.departureDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
-                    <span className="flex items-center gap-1"><Clock size={12} /> {b.travelers} traveler{b.travelers > 1 ? "s" : ""}</span>
-                    <span className="flex items-center gap-1"><CreditCard size={12} /> ₹{b.totalAmount.toLocaleString("en-IN")}</span>
+            <motion.div key={b._id || b.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <Link href={`/dashboard/bookings/${b._id || b.id}`}
+                className="glass-card p-4 sm:p-5 hover:border-cream/10 transition-all group block">
+                <div className="flex items-start gap-3 sm:gap-5">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-burnt-orange/20 to-burnt-orange/5 text-burnt-orange flex items-center justify-center flex-shrink-0">
+                    <MapPin size={18} className="sm:hidden" />
+                    <MapPin size={22} className="hidden sm:block" />
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${b.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400" : b.status === "pending" ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400"}`}>
-                    {b.status}
-                  </span>
-                  <span className={`text-xs px-2.5 py-1 rounded-full ${b.paymentStatus === "paid" ? "bg-emerald-500/5 text-emerald-400/60" : "bg-amber-500/5 text-amber-400/60"}`}>
-                    {b.paymentStatus}
-                  </span>
-                  <ArrowRight size={14} className="text-cream/15 group-hover:text-cream/40 transition-colors" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-cream font-medium truncate text-sm sm:text-base">{b.tripId?.title || "Custom Trip"}</p>
+                      <ArrowRight size={14} className="text-cream/15 group-hover:text-cream/40 transition-colors flex-shrink-0 hidden sm:block" />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] sm:text-xs text-cream/30">
+                      <span className="flex items-center gap-1"><CalendarCheck size={11} /> Booked {new Date(b.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                      <span className="flex items-center gap-1"><Clock size={11} /> {b.travellers?.length || 1} traveler{(b.travellers?.length || 1) > 1 ? "s" : ""}</span>
+                      <span className="flex items-center gap-1"><CreditCard size={11} /> ₹{b.totalAmount?.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2.5 sm:mt-3">
+                      <span className={`text-[10px] sm:text-xs px-2.5 py-1 rounded-full font-medium ${b.bookingStatus === "Confirmed" ? "bg-emerald-500/10 text-emerald-400" : b.bookingStatus === "Pending" ? "bg-amber-500/10 text-amber-400" : b.bookingStatus === "Cancellation Requested" ? "bg-orange-500/10 text-orange-400" : "bg-red-500/10 text-red-400"}`}>
+                        {b.bookingStatus}
+                      </span>
+                      <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full ${b.paymentStatus === "Completed" ? "bg-emerald-500/5 text-emerald-400/60" : "bg-amber-500/5 text-amber-400/60"}`}>
+                        {b.paymentStatus}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </Link>
             </motion.div>

@@ -1,9 +1,16 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+
+class InvalidCredentials extends CredentialsSignin {
+  constructor(message) {
+    super();
+    this.code = message;
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -19,18 +26,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+          throw new InvalidCredentials("Email and password are required");
         }
 
         await connectDB();
         const user = await User.findOne({ email: credentials.email });
         if (!user) {
-          throw new Error("No account found with this email");
+          throw new InvalidCredentials("No account found with this email");
         }
 
         const isValid = await compare(credentials.password, user.password);
         if (!isValid) {
-          throw new Error("Invalid password");
+          throw new InvalidCredentials("Invalid password");
         }
 
         return {
@@ -57,11 +64,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await User.create({
             name: user.name,
             email: user.email,
-            // Google auth doesn't provide a password or phone, handle accordingly in your schema 
-            // In this case, we'll auto-generate a random password for Google users to satisfy the schema requirement.
             password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
-            phone: "0000000000", // Default or you could make it optional in schema
-            role: "user",
+            phone: "0000000000",
+            role: user.email === 'junctionbackpack@gmail.com' ? 'admin' : 'user',
           });
         }
       }
@@ -71,17 +76,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.phone = user.phone;
-        token.role = user.role || "user";
+        token.role = user.email === 'junctionbackpack@gmail.com' ? 'admin' : (user.role || "user");
       }
+      
       // Always fetch latest role from DB
       if (token.email) {
-        await connectDB();
-        const dbUser = await User.findOne({ email: token.email });
-        if (dbUser) {
-          token.role = dbUser.role || "user";
-          token.id = dbUser._id.toString();
+        try {
+          await connectDB();
+          const dbUser = await User.findOne({ email: token.email });
+          if (dbUser) {
+            token.role = dbUser.email === 'junctionbackpack@gmail.com' ? 'admin' : (dbUser.role || "user");
+            token.id = dbUser._id.toString();
+          }
+        } catch (error) {
+          console.error("Error fetching dbUser in jwt callback:", error);
         }
       }
+      
+      // HARDCODE OVERRIDE JUST IN CASE
+      if (token.email === 'junctionbackpack@gmail.com') {
+        token.role = 'admin';
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -90,6 +106,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.phone = token.phone;
         session.user.role = token.role;
       }
+      
+      // HARDCODE OVERRIDE JUST IN CASE
+      if (session.user.email === 'junctionbackpack@gmail.com') {
+        session.user.role = 'admin';
+      }
+      
       return session;
     },
   },

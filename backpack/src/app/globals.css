@@ -36,10 +36,19 @@
    DO NOT add an un-layered * { margin:0 } reset here — it overrides ALL Tailwind utilities! */
 
 html {
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Reduce motion for accessibility + performance */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {
@@ -67,26 +76,29 @@ body {
    GLASSMORPHISM
    ============================================ */
 .glass {
-  background: rgba(30, 45, 74, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(30, 45, 74, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(245, 240, 232, 0.08);
 }
 
 .glass-dark {
-  background: rgba(12, 20, 32, 0.7);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: rgba(12, 20, 32, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(245, 240, 232, 0.06);
 }
 
 .glass-card {
-  background: linear-gradient(135deg, rgba(30, 45, 74, 0.3) 0%, rgba(30, 45, 74, 0.1) 100%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: linear-gradient(135deg, rgba(30, 45, 74, 0.4) 0%, rgba(30, 45, 74, 0.2) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(245, 240, 232, 0.07);
   border-radius: 20px;
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: background 0.5s cubic-bezier(0.23, 1, 0.32, 1), 
+              border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .glass-card:hover {
@@ -235,19 +247,15 @@ body {
   90% { transform: translate(-10%, 10%); }
 }
 
-/* Film grain */
+/* Film grain - Optimized for performance */
 .film-grain::after {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  animation: grain 8s steps(10) infinite;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1;
-  opacity: 0.4;
+  opacity: 0.2;
 }
 
 /* Splash screen */
@@ -300,4 +308,52 @@ body {
 }
 @media (max-width: 480px) {
   .section-padding { padding: 60px 0; }
+}
+
+/* ============================================
+   FORM AUTOFILL FIX
+   ============================================ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0a0f18 inset !important;
+  box-shadow: 0 0 0px 1000px #0a0f18 inset !important;
+  background-color: transparent !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+img, video {
+  content-visibility: auto;
+}
+* {
+  will-change: auto;
+}
+
+/* ============================================
+   MAP POPUP OVERRIDES
+   ============================================ */
+.custom-leaflet-popup .leaflet-popup-content-wrapper {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.custom-leaflet-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+
+.custom-leaflet-popup .leaflet-popup-tip-container {
+  display: none;
 }

@@ -17,6 +17,19 @@ const StorySchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-});
+  uploaderEmail: {
+    type: String,
+    required: false,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved'],
+    default: 'pending',
+  }
+}, { strict: false });
 
-export default mongoose.models.Story || mongoose.model('Story', StorySchema);
+if (mongoose.models.Story) {
+  delete mongoose.models.Story;
+}
+
+export default mongoose.model('Story', StorySchema);

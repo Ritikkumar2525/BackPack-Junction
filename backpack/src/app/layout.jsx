@@ -2,7 +2,6 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import AuthProvider from "@/components/AuthProvider";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import CustomCursor from "@/components/CustomCursor";
 import StarryBackground from "@/components/StarryBackground";
 
 export const metadata = {
@@ -39,7 +38,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -54,7 +53,6 @@ export default function RootLayout({ children }) {
       </head>
       <body className="antialiased w-full bg-transparent">
         <StarryBackground />
-        <CustomCursor />
         <AuthProvider>
           <SmoothScroll>{children}</SmoothScroll>
           <WhatsAppButton />

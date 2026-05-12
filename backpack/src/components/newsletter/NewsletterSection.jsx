@@ -24,8 +24,8 @@ export default function NewsletterSection() {
         }}
       />
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[200px] pointer-events-none"
-        style={{ background: "rgba(198,122,60,0.06)" }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(198,122,60,0.06) 0%, transparent 70%)" }}
       />
 
       <div className="max-w-3xl mx-auto px-6 lg:px-8 relative z-10">

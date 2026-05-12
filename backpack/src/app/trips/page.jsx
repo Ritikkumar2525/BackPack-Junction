@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
@@ -63,33 +64,30 @@ const pastTrips = [
 ];
 
 export default function TripsPage() {
+  const [dynamicPastTrips, setDynamicPastTrips] = useState([]);
+
+  useEffect(() => {
+    async function fetchPastExpeditions() {
+      try {
+        const res = await fetch("/api/admin/past-expeditions");
+        if (res.ok) {
+          const data = await res.json();
+          setDynamicPastTrips(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch past expeditions:", err);
+      }
+    }
+    fetchPastExpeditions();
+  }, []);
+
+  const allPastTrips = [...dynamicPastTrips, ...pastTrips];
+
   return (
     <main className="relative overflow-x-hidden">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-deep/50 to-midnight pointer-events-none" />
-        <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-burnt-orange/5 rounded-full blur-[150px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <span className="text-xs uppercase tracking-[4px] text-burnt-orange mb-4 block">
-              Join the Adventure
-            </span>
-            <h1 className="font-[family-name:var(--font-heading)] text-5xl md:text-7xl font-bold text-cream mb-4">
-              Our <span className="gradient-text-warm">Trips</span>
-            </h1>
-            <p className="text-cream/40 text-lg max-w-xl mx-auto">
-              Curated group experiences and solo adventures. Find your tribe,
-              find your trail.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      {/* Removed Hero section */}
 
       {/* Upcoming Trips */}
       <UpcomingTrips />
@@ -118,9 +116,9 @@ export default function TripsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pastTrips.map((trip, i) => (
+            {allPastTrips.map((trip, i) => (
               <motion.div
-                key={trip.title}
+                key={trip._id || trip.title}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -131,7 +129,11 @@ export default function TripsPage() {
                   <img
                     src={trip.image}
                     alt={trip.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400";
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 via-transparent to-transparent" />
                   <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 text-[10px] text-cream/60 font-medium">

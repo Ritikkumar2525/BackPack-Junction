@@ -58,8 +58,8 @@ export default function AiTripPlanner() {
   return (
     <section className="py-32 relative overflow-hidden">
       <div
-        className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px] pointer-events-none"
-        style={{ background: "rgba(198,122,60,0.04)" }}
+        className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(198,122,60,0.06) 0%, transparent 70%)" }}
       />
 
       <div className="max-w-4xl mx-auto px-6 lg:px-8">

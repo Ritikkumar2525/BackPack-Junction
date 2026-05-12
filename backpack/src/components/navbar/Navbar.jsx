@@ -62,6 +62,7 @@ export default function Navbar() {
             <motion.img
               src="/logo.jpg"
               alt="Backpack Junction"
+              fetchPriority="high"
               className="w-10 h-10 rounded-full object-cover border border-burnt-orange/30 group-hover:border-burnt-orange/60 transition-colors"
               whileHover={{ scale: 1.08 }}
               style={{ boxShadow: "0 0 15px rgba(198,122,60,0.2)" }}
@@ -240,6 +241,7 @@ export default function Navbar() {
               animate={{ opacity: 1, scale: 1 }}
               src="/logo.jpg"
               alt="Backpack Junction"
+              fetchPriority="high"
               className="w-20 h-20 rounded-full object-cover mb-10 border-2 border-burnt-orange/30"
               style={{ boxShadow: "0 0 30px rgba(198,122,60,0.2)" }}
             />

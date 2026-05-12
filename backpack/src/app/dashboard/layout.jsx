@@ -83,10 +83,15 @@ export default function DashboardLayout({ children }) {
     return null;
   }
 
-  const links = userLinks;
+  const links = session?.user?.role === "admin" 
+    ? [
+        { href: "/admin", label: "Admin Panel", icon: LayoutDashboard },
+        ...userLinks
+      ]
+    : userLinks;
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex items-center justify-center relative bg-[#0a0f18] p-4 sm:p-8">
+    <div className="h-screen w-screen overflow-hidden flex items-center justify-center relative bg-[#0a0f18] lg:p-8">
       {/* Background Image Overlay matching landing page vibe */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -109,7 +114,7 @@ export default function DashboardLayout({ children }) {
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-        className="w-full max-w-[1400px] h-full max-h-[900px] flex rounded-3xl overflow-hidden shadow-2xl border border-cream/10 bg-[#0a0f18]/60 backdrop-blur-2xl relative z-10"
+        className="w-full max-w-[1400px] h-full lg:max-h-[900px] flex lg:rounded-3xl overflow-hidden shadow-2xl lg:border border-cream/10 bg-[#0a0f18]/60 backdrop-blur-2xl relative z-10"
       >
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-72 border-r border-cream/5 p-6 relative z-10 bg-transparent h-full">
@@ -200,7 +205,7 @@ export default function DashboardLayout({ children }) {
         </AnimatePresence>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 h-full overflow-y-auto lg:p-8 p-4 pt-20 lg:pt-8 pb-32 relative z-10" data-lenis-prevent>
+        <main className="flex-1 min-w-0 h-full overflow-y-auto lg:p-8 p-4 pt-16 lg:pt-8 pb-24 relative z-10" data-lenis-prevent>
           {children}
         </main>
       </motion.div>

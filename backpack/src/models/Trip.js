@@ -24,7 +24,13 @@ const TripSchema = new mongoose.Schema({
   hotelDetails: { type: String },
   totalSeats: { type: Number, default: 20 },
   availableSeats: { type: Number, default: 20 },
+  departureDate: { type: Date },
   isPublished: { type: Boolean, default: true },
+  routeLocations: [{
+    name: { type: String, required: true },
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+  }],
 }, { timestamps: true });
 
 export default mongoose.models.Trip || mongoose.model('Trip', TripSchema);

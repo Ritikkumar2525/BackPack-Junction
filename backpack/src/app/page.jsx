@@ -1,18 +1,21 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import SplashScreen from "@/components/SplashScreen";
 import Navbar from "@/components/navbar/Navbar";
 import HeroSection from "@/components/hero/HeroSection";
-import TrendingDestinations from "@/components/destinations/TrendingDestinations";
-import StatsSection from "@/components/stats/StatsSection";
-import UpcomingTrips from "@/components/trips/UpcomingTrips";
-import AiTripPlanner from "@/components/ai-planner/AiTripPlanner";
-import InteractiveMap from "@/components/map/InteractiveMap";
-import TravelStories from "@/components/stories/TravelStories";
-import TestimonialsSection from "@/components/testimonials/TestimonialsSection";
-import NewsletterSection from "@/components/newsletter/NewsletterSection";
-import Footer from "@/components/footer/Footer";
+
+// Dynamically import below-the-fold components for ultra-fast initial load
+const TrendingDestinations = dynamic(() => import("@/components/destinations/TrendingDestinations"), { ssr: true });
+const StatsSection = dynamic(() => import("@/components/stats/StatsSection"), { ssr: true });
+const UpcomingTrips = dynamic(() => import("@/components/trips/UpcomingTrips"), { ssr: true });
+const AiTripPlanner = dynamic(() => import("@/components/ai-planner/AiTripPlanner"), { ssr: true });
+const InteractiveMap = dynamic(() => import("@/components/map/InteractiveMap"), { ssr: false }); // Map relies on window
+const TravelStories = dynamic(() => import("@/components/stories/TravelStories"), { ssr: true });
+const TestimonialsSection = dynamic(() => import("@/components/testimonials/TestimonialsSection"), { ssr: true });
+const NewsletterSection = dynamic(() => import("@/components/newsletter/NewsletterSection"), { ssr: true });
+const Footer = dynamic(() => import("@/components/footer/Footer"), { ssr: true });
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);

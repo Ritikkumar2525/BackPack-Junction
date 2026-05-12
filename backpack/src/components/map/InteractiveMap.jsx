@@ -67,7 +67,7 @@ export default function InteractiveMap() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="glass-card p-2 sm:p-4 relative rounded-3xl overflow-hidden shadow-2xl border border-cream/10 bg-[#0C1420]/80 backdrop-blur-md"
+          className="glass-card p-2 sm:p-4 relative rounded-3xl overflow-hidden shadow-2xl border border-cream/10 bg-[#0C1420]/90"
         >
           {/* Render the dynamically imported Leaflet Map */}
           <MapCore showRoute={showRoute} />

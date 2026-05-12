@@ -12,7 +12,7 @@ const generateStars = () => {
     return (seed - 1) / 2147483646;
   };
 
-  for (let i = 0; i < 400; i++) {
+  for (let i = 0; i < 80; i++) {
     stars.push({
       id: i,
       left: random() * 100,
@@ -32,9 +32,9 @@ export default function SplashScreen({ onComplete }) {
   const [phase, setPhase] = useState("logo");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("tagline"), 1200);
-    const t2 = setTimeout(() => setPhase("exit"), 3000);
-    const t3 = setTimeout(() => onComplete(), 3800);
+    const t1 = setTimeout(() => setPhase("tagline"), 500);
+    const t2 = setTimeout(() => setPhase("exit"), 1400);
+    const t3 = setTimeout(() => onComplete(), 1800);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -91,14 +91,15 @@ export default function SplashScreen({ onComplete }) {
 
           {/* Logo */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.6, filter: "blur(15px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             className="relative z-10"
           >
             <motion.img
               src="/logo.jpg"
               alt="Backpack Junction"
+              fetchPriority="high"
               className="w-36 h-36 md:w-48 md:h-48 rounded-full object-cover"
               style={{
                 boxShadow:
@@ -120,7 +121,7 @@ export default function SplashScreen({ onComplete }) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
             className="relative z-10 mt-8 text-center"
           >
             <h1 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold text-cream tracking-widest drop-shadow-lg">
@@ -147,7 +148,7 @@ export default function SplashScreen({ onComplete }) {
           <motion.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: "200px", opacity: 1 }}
-            transition={{ duration: 2.8, ease: "easeInOut" }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
             className="relative z-10 mt-12 h-[1px] rounded-full"
             style={{ 
               background: "linear-gradient(90deg, transparent, #C67A3C, transparent)",

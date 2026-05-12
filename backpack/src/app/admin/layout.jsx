@@ -5,13 +5,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, MapPin, CalendarCheck, ImagePlus, Users, BarChart3, LogOut, Menu, X, ChevronRight, Settings } from "lucide-react";
+import { LayoutDashboard, MapPin, CalendarCheck, ImagePlus, Users, BarChart3, LogOut, Menu, X, ChevronRight, Settings, AlertTriangle } from "lucide-react";
 
 const adminLinks = [
   { href: "/admin", label: "Analytics", icon: BarChart3 },
   { href: "/admin/trips", label: "Manage Trips", icon: MapPin },
+  { href: "/admin/past-expeditions", label: "Past Expeditions", icon: MapPin },
+  { href: "/admin/destinations", label: "Destinations", icon: MapPin },
   { href: "/admin/bookings", label: "All Bookings", icon: CalendarCheck },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/cancellations", label: "Cancellations", icon: AlertTriangle },
   { href: "/admin/gallery", label: "Gallery", icon: ImagePlus },
 ];
 
@@ -23,12 +26,12 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
-    } else if (status === "authenticated" && session?.user?.role !== "admin") {
+    } else if (status === "authenticated" && session?.user?.role !== "admin" && session?.user?.email !== "junctionbackpack@gmail.com") {
       router.push("/dashboard");
     }
   }, [status, session, router]);
 
-  if (status === "loading" || status === "unauthenticated" || (status === "authenticated" && session?.user?.role !== "admin")) {
+  if (status === "loading" || status === "unauthenticated" || (status === "authenticated" && session?.user?.role !== "admin" && session?.user?.email !== "junctionbackpack@gmail.com")) {
     return <div className="min-h-screen flex items-center justify-center" style={{ background: "#0C1420" }}><div className="w-10 h-10 border-2 border-burnt-orange/30 border-t-burnt-orange rounded-full animate-spin" /></div>;
   }
 

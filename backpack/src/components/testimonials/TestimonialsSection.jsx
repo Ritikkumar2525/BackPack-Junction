@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { testimonials } from "@/data/destinations";
+import Image from "next/image";
 
 export default function TestimonialsSection() {
   const [active, setActive] = useState(0);
@@ -22,8 +23,8 @@ export default function TestimonialsSection() {
   return (
     <section className="py-32 relative overflow-hidden">
       <div
-        className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-[200px] pointer-events-none"
-        style={{ background: "rgba(30,45,74,0.1)" }}
+        className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(30,45,74,0.15) 0%, transparent 70%)" }}
       />
 
       <div className="max-w-4xl mx-auto px-6 lg:px-8">
@@ -86,11 +87,20 @@ export default function TestimonialsSection() {
 
               {/* Author */}
               <div className="flex items-center gap-4">
-                <img
-                  src={t.avatar}
-                  alt={t.name}
-                  className="w-12 h-12 rounded-full object-cover border border-cream/10"
-                />
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-cream/10 bg-[#0C1420]">
+                  <Image
+                    src={t.avatar}
+                    alt={t.name}
+                    fill
+                    sizes="48px"
+                    unoptimized={true}
+                    className="object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=C67A3C&color=fff`;
+                    }}
+                  />
+                </div>
                 <div>
                   <p className="text-cream font-semibold text-sm">{t.name}</p>
                   <p className="text-cream/30 text-xs">

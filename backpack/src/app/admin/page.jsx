@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, MapPin, CalendarCheck, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Users, MapPin, CalendarCheck, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight, Clock, AlertCircle } from "lucide-react";
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -14,14 +14,16 @@ export default function AdminDashboard() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-burnt-orange/30 border-t-burnt-orange rounded-full animate-spin" /></div>;
   if (!data) return <div className="text-cream/30 text-center py-20">Failed to load analytics</div>;
 
+  const isPositive = (val) => !val?.startsWith("-") && val !== "0" && val !== "0%";
+
   const stats = [
-    { label: "Total Revenue", value: `₹${data.stats.totalRevenue.toLocaleString("en-IN")}`, icon: CreditCard, color: "text-emerald-400", bg: "bg-emerald-500/10", change: "+23%" },
-    { label: "Total Bookings", value: data.stats.total, icon: CalendarCheck, color: "text-blue-400", bg: "bg-blue-500/10", change: "+12%" },
-    { label: "Active Trips", value: data.stats.upcomingTrips, icon: MapPin, color: "text-burnt-orange", bg: "bg-burnt-orange/10", change: "+4" },
-    { label: "Total Users", value: data.stats.totalUsers, icon: Users, color: "text-purple-400", bg: "bg-purple-500/10", change: "+8%" },
+    { label: "Total Revenue", value: `₹${data.stats.totalRevenue.toLocaleString("en-IN")}`, icon: CreditCard, color: "text-emerald-400", bg: "bg-emerald-500/10", change: data.stats.revenueChange },
+    { label: "Total Bookings", value: data.stats.total, icon: CalendarCheck, color: "text-blue-400", bg: "bg-blue-500/10", change: data.stats.bookingChange },
+    { label: "Active Trips", value: data.stats.upcomingTrips, icon: MapPin, color: "text-burnt-orange", bg: "bg-burnt-orange/10", change: `${data.stats.totalTrips} total` },
+    { label: "Total Users", value: data.stats.totalUsers, icon: Users, color: "text-purple-400", bg: "bg-purple-500/10", change: data.stats.userChange },
   ];
 
-  const maxRevenue = Math.max(...data.monthlyRevenue.map(m => m.revenue));
+  const maxRevenue = Math.max(...data.monthlyRevenue.map(m => m.revenue), 1);
 
   return (
     <div className="space-y-8">
@@ -37,7 +39,9 @@ export default function AdminDashboard() {
             className="glass-card p-5">
             <div className="flex items-center justify-between mb-3">
               <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.color} flex items-center justify-center`}><s.icon size={18} /></div>
-              <span className="text-emerald-400 text-xs flex items-center gap-0.5"><ArrowUpRight size={12} />{s.change}</span>
+              <span className={`text-xs flex items-center gap-0.5 ${isPositive(s.change) ? "text-emerald-400" : "text-cream/30"}`}>
+                {isPositive(s.change) ? <ArrowUpRight size={12} /> : null}{s.change}
+              </span>
             </div>
             <p className="text-2xl font-bold text-cream font-[family-name:var(--font-heading)]">{s.value}</p>
             <p className="text-cream/30 text-xs mt-1">{s.label}</p>
@@ -45,6 +49,21 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Pending Payments Alert */}
+      {data.stats.pendingPayments > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="glass-card p-4 border-l-4 border-amber-500/50 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center flex-shrink-0">
+            <AlertCircle size={18} />
+          </div>
+          <div className="flex-1">
+            <p className="text-cream font-medium text-sm">Pending Payments</p>
+            <p className="text-cream/40 text-xs">₹{data.stats.pendingPayments.toLocaleString("en-IN")} in outstanding payments from {data.stats.pending} pending booking{data.stats.pending !== 1 ? "s" : ""}</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Booking Status Breakdown + Revenue Chart */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Revenue Chart */}
         <div className="lg:col-span-2 glass-card p-6">
@@ -53,7 +72,7 @@ export default function AdminDashboard() {
             {data.monthlyRevenue.map((m, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-2">
                 <span className="text-cream/30 text-[10px]">₹{(m.revenue / 1000).toFixed(0)}k</span>
-                <motion.div initial={{ height: 0 }} animate={{ height: `${(m.revenue / maxRevenue) * 100}%` }} transition={{ delay: i * 0.1, duration: 0.5 }}
+                <motion.div initial={{ height: 0 }} animate={{ height: `${Math.max((m.revenue / maxRevenue) * 100, 3)}%` }} transition={{ delay: i * 0.1, duration: 0.5 }}
                   className="w-full rounded-t-lg bg-gradient-to-t from-burnt-orange/40 to-burnt-orange/10 min-h-[4px]" />
                 <span className="text-cream/20 text-[10px]">{m.month}</span>
               </div>
@@ -61,23 +80,47 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Trip Occupancy */}
+        {/* Booking Status Breakdown */}
         <div className="glass-card p-6">
-          <h2 className="text-cream font-semibold mb-4">Trip Occupancy</h2>
+          <h2 className="text-cream font-semibold mb-4">Booking Status</h2>
           <div className="space-y-4">
-            {data.tripPopularity.map((t, i) => (
+            {[
+              { label: "Confirmed", count: data.stats.confirmed, color: "bg-emerald-500", textColor: "text-emerald-400" },
+              { label: "Pending", count: data.stats.pending, color: "bg-amber-500", textColor: "text-amber-400" },
+              { label: "Cancelled", count: data.stats.cancelled, color: "bg-red-500", textColor: "text-red-400" },
+            ].map((s, i) => (
               <div key={i}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-cream/60">{t.name}</span>
-                  <span className="text-cream/30 text-xs">{t.bookings}/{t.capacity}</span>
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span className="text-cream/60 flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${s.color}`} />
+                    {s.label}
+                  </span>
+                  <span className={`font-medium ${s.textColor}`}>{s.count}</span>
                 </div>
-                <div className="w-full bg-cream/5 rounded-full h-2">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${t.occupancy}%` }} transition={{ delay: i * 0.1 }}
-                    className={`h-2 rounded-full ${t.occupancy > 80 ? "bg-emerald-500" : t.occupancy > 50 ? "bg-burnt-orange" : "bg-amber-500"}`} />
+                <div className="w-full bg-cream/5 rounded-full h-1.5">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${data.stats.total > 0 ? (s.count / data.stats.total) * 100 : 0}%` }} transition={{ delay: i * 0.1 }}
+                    className={`h-1.5 rounded-full ${s.color}/60`} />
                 </div>
-                <p className="text-right text-[10px] text-cream/20 mt-0.5">{t.occupancy}%</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-cream/5">
+            <h3 className="text-cream/50 text-xs font-medium mb-3">Trip Occupancy</h3>
+            <div className="space-y-3">
+              {data.tripPopularity.map((t, i) => (
+                <div key={i}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-cream/50 truncate max-w-[140px]">{t.name}</span>
+                    <span className="text-cream/30">{t.bookings}/{t.capacity}</span>
+                  </div>
+                  <div className="w-full bg-cream/5 rounded-full h-1.5">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${t.occupancy}%` }} transition={{ delay: i * 0.1 }}
+                      className={`h-1.5 rounded-full ${t.occupancy > 80 ? "bg-emerald-500" : t.occupancy > 50 ? "bg-burnt-orange" : "bg-amber-500"}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -96,9 +139,9 @@ export default function AdminDashboard() {
                   <td className="py-3 text-cream/50 font-mono text-xs">{b.id}</td>
                   <td className="py-3 text-cream/70">{b.tripTitle}</td>
                   <td className="py-3 text-cream/40">{new Date(b.bookingDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
-                  <td className="py-3 text-burnt-orange font-medium">₹{b.totalAmount.toLocaleString("en-IN")}</td>
-                  <td className="py-3"><span className={`text-xs px-2 py-1 rounded-full ${b.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>{b.status}</span></td>
-                  <td className="py-3"><span className={`text-xs ${b.paymentStatus === "paid" ? "text-emerald-400/60" : "text-amber-400/60"}`}>{b.paymentStatus}</span></td>
+                  <td className="py-3 text-burnt-orange font-medium">₹{b.totalAmount?.toLocaleString("en-IN")}</td>
+                  <td className="py-3"><span className={`text-xs px-2 py-1 rounded-full ${b.status === "Confirmed" ? "bg-emerald-500/10 text-emerald-400" : b.status === "Cancelled" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"}`}>{b.status}</span></td>
+                  <td className="py-3"><span className={`text-xs ${b.paymentStatus === "Completed" ? "text-emerald-400/60" : b.paymentStatus === "Failed" ? "text-red-400/60" : "text-amber-400/60"}`}>{b.paymentStatus}</span></td>
                 </tr>
               ))}
             </tbody>
