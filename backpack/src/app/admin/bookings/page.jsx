@@ -74,8 +74,11 @@ export default function AdminBookingsPage() {
   const selectedTripData = selectedTrip !== "all" ? tripList.find(t => t.id === selectedTrip) : null;
 
   const exportCSV = () => {
-    const csv = ["Booking ID,Trip,Amount,Status,Payment Status,Primary Traveller,Phone"].concat(
-      filtered.map(b => `${b.bookingId},"${b.tripId?.title || 'Unknown'}",${b.totalAmount},${b.bookingStatus},${b.paymentStatus},"${b.travellers[0]?.fullName || ''}",${b.travellers[0]?.contactNumber || ''}`)
+    const csv = ["Booking ID,Trip,Total Amount,Paid Amount,Due Amount,Payment Mode,Booking Status,Payment Status,Primary Traveller,Phone"].concat(
+      filtered.map(b => {
+        const due = Math.max(0, (b.totalAmount || 0) - (b.amountPaid || 0));
+        return `${b.bookingId},"${b.tripId?.title || 'Unknown'}",${b.totalAmount || 0},${b.amountPaid || 0},${due},${b.paymentMode || 'Full Payment'},${b.bookingStatus},${b.paymentStatus},"${b.travellers[0]?.fullName || ''}",${b.travellers[0]?.contactNumber || ''}`;
+      })
     ).join("\n");
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -159,28 +162,32 @@ export default function AdminBookingsPage() {
         ))}
       </div>
 
-      {/* Bookings Table */}
       <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-cream/30 text-xs text-left border-b border-cream/5 bg-cream/[0.02]">
-              <th className="p-4 font-medium">Booking ID</th><th className="p-4 font-medium">Primary Traveller</th><th className="p-4 font-medium">Trip</th><th className="p-4 font-medium">Amount</th><th className="p-4 font-medium">Status</th><th className="p-4 font-medium">Payment</th><th className="p-4 font-medium">Action</th>
+              <th className="p-4 font-medium">Booking ID</th><th className="p-4 font-medium">Primary Traveller</th><th className="p-4 font-medium">Trip</th><th className="p-4 font-medium">Total</th><th className="p-4 font-medium">Paid</th><th className="p-4 font-medium">Due</th><th className="p-4 font-medium">Status</th><th className="p-4 font-medium">Payment</th><th className="p-4 font-medium">Action</th>
             </tr></thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="p-12 text-center text-cream/25 text-sm">No bookings found for this filter.</td></tr>
+                <tr><td colSpan={9} className="p-12 text-center text-cream/25 text-sm">No bookings found for this filter.</td></tr>
               ) : (
-                filtered.map(b => (
-                  <tr key={b._id} className="border-b border-cream/[0.03] hover:bg-cream/[0.02] transition-colors">
-                    <td className="p-4 text-cream/50 font-mono text-xs">{b.bookingId}</td>
-                    <td className="p-4"><p className="text-cream/70 font-medium">{b.travellers[0]?.fullName || 'N/A'}</p><p className="text-cream/30 text-xs">{b.travellers[0]?.contactNumber || ''}</p></td>
-                    <td className="p-4 text-cream/40">{b.tripId?.title || 'Unknown'}</td>
-                    <td className="p-4 text-burnt-orange font-medium">₹{b.totalAmount.toLocaleString("en-IN")}</td>
-                    <td className="p-4"><span className={`text-[10px] px-2.5 py-1 rounded-full ${b.bookingStatus === "Confirmed" ? "bg-emerald-500/10 text-emerald-400" : b.bookingStatus === "Cancelled" ? "bg-red-500/10 text-red-400" : b.bookingStatus === "Cancellation Requested" ? "bg-orange-500/10 text-orange-400" : "bg-amber-500/10 text-amber-400"}`}>{b.bookingStatus}</span></td>
-                    <td className="p-4"><span className={`text-[10px] px-2.5 py-1 rounded-full ${b.paymentStatus === "Completed" ? "bg-emerald-500/10 text-emerald-400" : b.paymentStatus === "Failed" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"}`}>{b.paymentStatus}</span></td>
-                    <td className="p-4"><button onClick={() => setSelectedBooking(b)} className="text-xs text-burnt-orange hover:text-burnt-orange/80 underline underline-offset-2">View Details</button></td>
-                  </tr>
-                ))
+                filtered.map(b => {
+                  const due = Math.max(0, (b.totalAmount || 0) - (b.amountPaid || 0));
+                  return (
+                    <tr key={b._id} className="border-b border-cream/[0.03] hover:bg-cream/[0.02] transition-colors">
+                      <td className="p-4 text-cream/50 font-mono text-xs">{b.bookingId}</td>
+                      <td className="p-4"><p className="text-cream/70 font-medium">{b.travellers[0]?.fullName || 'N/A'}</p><p className="text-cream/30 text-xs">{b.travellers[0]?.contactNumber || ''}</p></td>
+                      <td className="p-4 text-cream/40">{b.tripId?.title || 'Unknown'}</td>
+                      <td className="p-4 text-burnt-orange font-medium">₹{(b.totalAmount || 0).toLocaleString("en-IN")}</td>
+                      <td className="p-4 text-emerald-400 font-medium">₹{(b.amountPaid || 0).toLocaleString("en-IN")}</td>
+                      <td className="p-4"><span className={`font-medium ${due > 0 ? 'text-amber-400' : 'text-emerald-400/60'}`}>{due > 0 ? `₹${due.toLocaleString("en-IN")}` : '—'}</span></td>
+                      <td className="p-4"><span className={`text-[10px] px-2.5 py-1 rounded-full ${b.bookingStatus === "Confirmed" ? "bg-emerald-500/10 text-emerald-400" : b.bookingStatus === "Cancelled" ? "bg-red-500/10 text-red-400" : b.bookingStatus === "Cancellation Requested" ? "bg-orange-500/10 text-orange-400" : "bg-amber-500/10 text-amber-400"}`}>{b.bookingStatus}</span></td>
+                      <td className="p-4"><span className={`text-[10px] px-2.5 py-1 rounded-full ${b.paymentStatus === "Completed" ? "bg-emerald-500/10 text-emerald-400" : b.paymentStatus === "Partial" ? "bg-amber-500/10 text-amber-400" : b.paymentStatus === "Failed" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"}`}>{b.paymentStatus === "Partial" ? "Partial" : b.paymentStatus}</span></td>
+                      <td className="p-4"><button onClick={() => setSelectedBooking(b)} className="text-xs text-burnt-orange hover:text-burnt-orange/80 underline underline-offset-2">View Details</button></td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -212,6 +219,7 @@ export default function AdminBookingsPage() {
                     <label className="text-cream/30 text-xs block mb-1">Update Booking Status</label>
                     <select value={selectedBooking.bookingStatus} onChange={(e) => updateStatus(selectedBooking._id, 'bookingStatus', e.target.value)} className="glass rounded-lg px-3 py-2 text-sm text-cream w-full outline-none">
                       <option value="Pending" className="bg-midnight">Pending</option>
+                      <option value="Processing" className="bg-midnight">Processing</option>
                       <option value="Confirmed" className="bg-midnight">Confirmed</option>
                       <option value="Cancellation Requested" className="bg-midnight">Cancellation Requested</option>
                       <option value="Cancelled" className="bg-midnight">Cancelled</option>
@@ -236,14 +244,28 @@ export default function AdminBookingsPage() {
                     <div className="glass p-4 rounded-xl space-y-2 text-sm border border-cream/5">
                       <p className="flex justify-between"><span className="text-cream/30">Title:</span><span className="text-cream">{selectedBooking.tripId?.title || 'Unknown'}</span></p>
                       <p className="flex justify-between"><span className="text-cream/30">Destination:</span><span className="text-cream">{selectedBooking.tripId?.destination || 'N/A'}</span></p>
+                      <p className="flex justify-between"><span className="text-cream/30">Duration:</span><span className="text-cream">{selectedBooking.tripId?.duration || 'N/A'}</span></p>
+                      <p className="flex justify-between"><span className="text-cream/30">Travelers:</span><span className="text-cream">{selectedBooking.travellers?.length || 0}</span></p>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-cream/70 mb-3 flex items-center gap-2"><CreditCard size={14}/> Financials</h3>
-                    <div className="glass p-4 rounded-xl space-y-2 text-sm border border-cream/5">
-                      <p className="flex justify-between"><span className="text-cream/30">Total Amount:</span><span className="text-burnt-orange font-bold">₹{selectedBooking.totalAmount.toLocaleString('en-IN')}</span></p>
-                      <p className="flex justify-between"><span className="text-cream/30">Amount Paid:</span><span className="text-emerald-400">₹{selectedBooking.amountPaid.toLocaleString('en-IN')}</span></p>
-                      <p className="flex justify-between"><span className="text-cream/30">Razorpay ID:</span><span className="text-cream/50 text-xs font-mono">{selectedBooking.razorpayPaymentId || 'N/A'}</span></p>
+                    <h3 className="text-sm font-semibold text-cream/70 mb-3 flex items-center gap-2"><CreditCard size={14}/> Payment Tracking</h3>
+                    <div className="glass p-4 rounded-xl space-y-2.5 text-sm border border-cream/5">
+                      <p className="flex justify-between"><span className="text-cream/30">Total Amount:</span><span className="text-burnt-orange font-bold text-base">₹{(selectedBooking.totalAmount || 0).toLocaleString('en-IN')}</span></p>
+                      <p className="flex justify-between"><span className="text-cream/30">Advance Paid:</span><span className="text-emerald-400 font-semibold">₹{(selectedBooking.amountPaid || 0).toLocaleString('en-IN')}</span></p>
+                      <div className="flex justify-between pt-2 border-t border-cream/5">
+                        <span className="text-amber-400/80 font-medium">Due Amount:</span>
+                        <span className={`font-bold text-base ${Math.max(0, (selectedBooking.totalAmount || 0) - (selectedBooking.amountPaid || 0)) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          ₹{Math.max(0, (selectedBooking.totalAmount || 0) - (selectedBooking.amountPaid || 0)).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-cream/5 space-y-2">
+                        <p className="flex justify-between"><span className="text-cream/30">Payment Mode:</span><span className={`text-xs px-2 py-0.5 rounded-full ${selectedBooking.paymentMode === 'Pay Later' ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}`}>{selectedBooking.paymentMode || 'Full Payment'}</span></p>
+                        <p className="flex justify-between"><span className="text-cream/30">Payment Method:</span><span className="text-cream/60">{selectedBooking.paymentMethod || 'N/A'}</span></p>
+                        <p className="flex justify-between"><span className="text-cream/30">Booking Charge:</span><span className="text-cream/50">₹{(selectedBooking.bookingCharge || 0).toLocaleString('en-IN')}</span></p>
+                        {selectedBooking.razorpayPaymentId && <p className="flex justify-between"><span className="text-cream/30">Razorpay ID:</span><span className="text-cream/50 text-xs font-mono">{selectedBooking.razorpayPaymentId}</span></p>}
+                        {selectedBooking.razorpayOrderId && <p className="flex justify-between"><span className="text-cream/30">Order ID:</span><span className="text-cream/50 text-xs font-mono">{selectedBooking.razorpayOrderId}</span></p>}
+                      </div>
                     </div>
                   </div>
                 </div>

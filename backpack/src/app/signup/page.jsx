@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { AlertCircle, Check, Mountain } from "lucide-react";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const { status } = useSession();
   const [form, setForm] = useState({
     name: "",
@@ -22,9 +24,9 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/");
+      router.push(callbackUrl || "/dashboard");
     }
-  }, [status, router]);
+  }, [status, router, callbackUrl]);
 
   if (status === "loading" || status === "authenticated") {
     return null;
@@ -58,7 +60,7 @@ export default function SignupPage() {
 
       setDone(true);
       if (!signInResult?.error) {
-         setTimeout(() => router.push("/dashboard"), 1500);
+         setTimeout(() => router.push(callbackUrl || "/dashboard"), 1500);
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -68,7 +70,7 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignUp = () => {
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: callbackUrl || "/dashboard" });
   };
 
   if (done) {
@@ -131,7 +133,7 @@ export default function SignupPage() {
           </div>
 
           <div className="relative z-10 text-cream/40 font-medium text-xs">
-            Already a member? <Link href="/login" className="text-burnt-orange hover:text-white transition-colors ml-1 font-bold">Log in here</Link>
+            Already a member? <Link href={`/login${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-burnt-orange hover:text-white transition-colors ml-1 font-bold">Log in here</Link>
           </div>
         </div>
 
@@ -253,11 +255,19 @@ export default function SignupPage() {
             </div>
             
             <div className="lg:hidden mt-6 mb-2 text-center text-cream/40 font-medium text-xs">
-              Already a member? <Link href="/login" className="text-burnt-orange underline underline-offset-4 decoration-2 font-bold hover:text-white">Log in here</Link>
+              Already a member? <Link href={`/login${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-burnt-orange underline underline-offset-4 decoration-2 font-bold hover:text-white">Log in here</Link>
             </div>
           </div>
         </div>
       </motion.div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0a0f18]"><div className="w-10 h-10 border-2 border-burnt-orange/30 border-t-burnt-orange rounded-full animate-spin" /></div>}>
+      <SignupForm />
+    </Suspense>
   );
 }

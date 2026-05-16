@@ -10,6 +10,7 @@ import {
   LayoutDashboard, MapPin, CalendarCheck, ImagePlus, LogOut,
   Menu, X, ChevronRight, User
 } from "lucide-react";
+import ReviewPopup from "@/components/reviews/ReviewPopup";
 
 function ParticleField() {
   const canvasRef = useRef(null);
@@ -67,7 +68,8 @@ export default function DashboardLayout({ children }) {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      const currentPath = window.location.pathname + window.location.search;
+      router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
     }
   }, [status, router]);
 
@@ -208,6 +210,7 @@ export default function DashboardLayout({ children }) {
         <main className="flex-1 min-w-0 h-full overflow-y-auto lg:p-8 p-4 pt-16 lg:pt-8 pb-24 relative z-10" data-lenis-prevent>
           {children}
         </main>
+        <ReviewPopup />
       </motion.div>
     </div>
   );

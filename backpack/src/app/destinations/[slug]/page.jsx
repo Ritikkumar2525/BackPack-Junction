@@ -2,18 +2,18 @@ import { destinations as staticDestinations } from "@/data/destinations";
 import DestinationPage from "./DestinationPage";
 import { notFound } from "next/navigation";
 
+// Allow dynamic routes for DB-added destinations not in static params
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   return staticDestinations.map((d) => ({ slug: d.id }));
 }
 
-async function getDestination(slug) {
-  // First check static
-  let dest = staticDestinations.find((d) => d.id === slug);
-  if (dest) return dest;
+// Disable static caching so admin updates reflect instantly
+export const revalidate = 0;
 
-  // Otherwise check API/DB (runs on server, requires absolute URL if using fetch, 
-  // but since we're in Server Components, it's better to just hit the DB directly or use absolute URL.
-  // We'll use the DB directly to avoid absolute URL issues in Next.js Server Components.
+async function getDestination(slug) {
+  // First check API/DB for the latest values
   try {
     const connectToDatabase = (await import('@/lib/mongodb')).default;
     const Destination = (await import('@/models/Destination')).default;
@@ -25,6 +25,11 @@ async function getDestination(slug) {
   } catch (error) {
     console.error("Error fetching destination from DB:", error);
   }
+
+  // Fallback to static if not found in DB
+  let dest = staticDestinations.find((d) => d.id === slug);
+  if (dest) return dest;
+
   return null;
 }
 

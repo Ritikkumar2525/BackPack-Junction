@@ -1,19 +1,46 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Calendar, Users, CreditCard, ArrowRight, Check, Clock, ChevronDown, HeartPulse, Building2, QrCode, Smartphone, Shield, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { MapPin, Calendar, Users, CreditCard, ArrowRight, Check, Clock, ChevronDown, HeartPulse, Shield, AlertTriangle, MessageCircle, Phone, Mail, X, Mountain } from "lucide-react";
 import Script from "next/script";
-import { Suspense } from "react";
-import PaymentModal from "@/components/payment/PaymentModal";
 import TermsConsent from "@/components/payment/TermsConsent";
 
-const BOOKING_CHARGE = 1000;
+const BOOKING_CHARGE = 1500;
+
+function AnimatedStoryText({ text, delay = 0, highlight = false, italic = false }) {
+  const words = text.split(" ");
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: { transition: { staggerChildren: 0.03, delayChildren: delay } },
+      }}
+      className={`text-[13px] sm:text-sm leading-relaxed mb-3 ${highlight ? 'text-burnt-orange/90 font-medium' : 'text-cream/70'} ${italic ? 'italic' : ''}`}
+    >
+      {words.map((word, i) => (
+        <motion.span
+          key={i}
+          variants={{
+            hidden: { opacity: 0, filter: "blur(4px)", y: 5 },
+            visible: { opacity: 1, filter: "blur(0px)", y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+          }}
+          className="inline-block mr-1.5"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </motion.div>
+  );
+}
 
 function BookTripForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tripIdParam = searchParams.get("trip");
+  const destinationParam = searchParams.get("destination");
 
   const [trips, setTrips] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -22,28 +49,79 @@ function BookTripForm() {
   const [booking, setBooking] = useState(false);
   const [done, setDone] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const [travelerCount, setTravelerCount] = useState(1);
   const emptyTraveller = { fullName: "", age: "", gender: "Male", contactNumber: "", emailAddress: "", city: "", emergencyContact: "", foodPreference: "Veg", medicalConditions: "", specialRequests: "" };
   const [travellersData, setTravellersData] = useState([{ ...emptyTraveller }]);
 
-  const [paymentMethod, setPaymentMethod] = useState("Razorpay");
   const [paymentMode, setPaymentMode] = useState("Full Payment");
   const [consentAccepted, setConsentAccepted] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [manualMethod, setManualMethod] = useState("");
 
   useEffect(() => {
-    fetch("/api/trips?filter=upcoming").then(r => r.json()).then(d => {
-      const ft = d.trips || [];
-      setTrips(ft);
+    fetch("/api/trips?filter=upcoming", { cache: "no-store" }).then(r => r.json()).then(d => {
+      const allTrips = d.trips || [];
+      
+      let filteredTrips = allTrips;
+      
+      if (destinationParam) {
+        const target = destinationParam.toLowerCase().trim();
+        const normalizedTarget = target.replace(/[^a-z0-9]/g, '');
+        const targetWords = target.split(/[\s,-]+/).filter(w => w.length > 2);
+
+        filteredTrips = allTrips.filter(t => {
+          if (t.isPublished === false) return false;
+          
+          const destName = (t.destination || "").toLowerCase().trim();
+          const tripTitle = (t.title || "").toLowerCase().trim();
+          
+          // 1. Direct or Substring match
+          if (destName === target || destName.includes(target) || target.includes(destName)) return true;
+          if (tripTitle.includes(target) || target.includes(tripTitle)) return true;
+          
+          // 2. Normalized alphanumeric match (ignores spaces/hyphens)
+          const normalizedDest = destName.replace(/[^a-z0-9]/g, '');
+          const normalizedTitle = tripTitle.replace(/[^a-z0-9]/g, '');
+          
+          if (normalizedDest && (normalizedDest.includes(normalizedTarget) || normalizedTarget.includes(normalizedDest))) return true;
+          if (normalizedTitle && (normalizedTitle.includes(normalizedTarget) || normalizedTarget.includes(normalizedTitle))) return true;
+          
+          // 3. Keyword matching (e.g. "Spiti Valley" matches "Spiti Circuit")
+          if (targetWords.length > 0) {
+            const hasKeywordMatch = targetWords.some(word => 
+              destName.includes(word) || tripTitle.includes(word)
+            );
+            if (hasKeywordMatch) return true;
+          }
+          
+          return false;
+        });
+        
+        if (filteredTrips.length === 0) {
+          setShowModal(true);
+          filteredTrips = allTrips; // Show all alternative trips so the page is never empty
+        } else {
+          // If there are matches, sort them to put the most relevant ones first
+          // (Exact matches > Keyword matches)
+          filteredTrips.sort((a, b) => {
+            const aName = (a.destination || "").toLowerCase();
+            const bName = (b.destination || "").toLowerCase();
+            if (aName === target) return -1;
+            if (bName === target) return 1;
+            return 0;
+          });
+        }
+      }
+
+      setTrips(filteredTrips);
+
       if (tripIdParam) {
-        const found = ft.find(t => (t._id || t.id) === tripIdParam);
+        const found = allTrips.find(t => (t._id || t.id) === tripIdParam);
         if (found) { setSelected(found); setStep(2); }
       }
       setLoading(false);
     });
-  }, [tripIdParam]);
+  }, [tripIdParam, destinationParam]);
 
   const handleTravelerCountChange = (n) => {
     setTravelerCount(n);
@@ -68,9 +146,16 @@ function BookTripForm() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature, bookingId: bId }),
       });
-      if (res.ok) { const data = await res.json(); setBookingResult(data.booking); setDone(true); }
-      else alert("Payment Verification Failed!");
-    } catch (err) { console.error(err); alert("Verification Error"); }
+      if (res.ok) {
+        // Redirect to processing page which shows animated states then success
+        router.push(`/payment/processing?bookingId=${bId}&status=success`);
+      } else {
+        router.push(`/payment/processing?bookingId=${bId}&status=failed`);
+      }
+    } catch (err) {
+      console.error(err);
+      router.push(`/payment/processing?bookingId=${bId}&status=failed`);
+    }
     setBooking(false);
   };
 
@@ -80,30 +165,27 @@ function BookTripForm() {
     try {
       const res = await fetch("/api/bookings", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tripId: selected._id || selected.id, travellers: travellersData, paymentMethod, paymentMode, consentAccepted }),
+        body: JSON.stringify({ tripId: selected._id || selected.id, travellers: travellersData, paymentMethod: "Razorpay", paymentMode, consentAccepted }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || "Booking failed"); setBooking(false); return; }
 
-      if (paymentMethod === "Razorpay") {
-        if (!data.orderId) { alert("Could not generate order."); setBooking(false); return; }
-        const options = {
-          key: data.razorpayKeyId, amount: data.payableAmount * 100, currency: "INR",
-          name: "BackPack Junction", description: `${selected.title}${paymentMode === "Pay Later" ? " (Booking Charge)" : ""}`,
-          order_id: data.orderId,
-          handler: (response) => verifyPayment(response, data.booking.bookingId),
-          prefill: { name: travellersData[0].fullName, email: travellersData[0].emailAddress, contact: travellersData[0].contactNumber },
-          theme: { color: "#C67A3C" },
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-        rzp.on("payment.failed", (r) => { alert("Payment Failed: " + r.error.description); setBooking(false); });
-      } else {
-        setBookingResult(data.booking);
-        setManualMethod(paymentMethod);
-        setShowPaymentModal(true);
-        setBooking(false);
-      }
+      if (!data.orderId) { alert("Could not generate order."); setBooking(false); return; }
+      const options = {
+        key: data.razorpayKeyId, amount: data.payableAmount * 100, currency: "INR",
+        name: "BackPack Junction", description: `${selected.title}${paymentMode === "Pay Later" ? " (Booking Charge)" : ""}`,
+        order_id: data.orderId,
+        handler: (response) => verifyPayment(response, data.booking.bookingId),
+        prefill: { name: travellersData[0].fullName, email: travellersData[0].emailAddress, contact: travellersData[0].contactNumber },
+        theme: { color: "#C67A3C" },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      rzp.on("payment.failed", (r) => { 
+        console.error("Payment failed:", r.error);
+        router.push(`/payment/processing?bookingId=${data.booking.bookingId}&status=failed`);
+        setBooking(false); 
+      });
     } catch (e) { console.error(e); setBooking(false); }
   };
 
@@ -166,13 +248,21 @@ function BookTripForm() {
                 </div>
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex gap-3 text-xs text-cream/30">
-                    <span className="flex items-center gap-1"><Calendar size={12} /> {t.departureDate ? new Date(t.departureDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Flexible"}</span>
+                    <span className="flex items-center gap-1"><Calendar size={12} /> {t.startDate ? new Date(t.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Flexible"}</span>
                     <span className="flex items-center gap-1"><Clock size={12} /> {t.duration}</span>
                   </div>
                   <p className="text-burnt-orange font-bold">₹{(t.price || 0).toLocaleString("en-IN")}</p>
                 </div>
               </button>
-            )) : <div className="col-span-2 text-center text-cream/50 py-10">No upcoming trips available.</div>}
+            )) : (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-2 text-center py-16">
+                <div className="w-16 h-16 rounded-2xl bg-burnt-orange/10 text-burnt-orange flex items-center justify-center mx-auto mb-4">
+                  <Calendar size={28} />
+                </div>
+                <p className="text-cream/50 text-lg font-medium">No upcoming trips at the moment</p>
+                <p className="text-cream/25 text-sm mt-2">Check back soon — new adventures are being planned!</p>
+              </motion.div>
+            )}
           </motion.div>
         )}
 
@@ -279,23 +369,12 @@ function BookTripForm() {
                 )}
               </div>
 
-              {/* Payment Method */}
-              <div>
-                <label className="text-cream/40 text-xs uppercase tracking-wider mb-3 block">Payment Method</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {[
-                    { id: "Razorpay", icon: <CreditCard size={16} />, label: "Razorpay", sub: "Cards, UPI, Wallets" },
-                    { id: "Bank Transfer", icon: <Building2 size={16} />, label: "Bank Transfer", sub: "NEFT / IMPS" },
-                    { id: "QR Code", icon: <QrCode size={16} />, label: "QR Code", sub: "Scan & Pay" },
-                    { id: "UPI", icon: <Smartphone size={16} />, label: "UPI ID", sub: "Direct Transfer" },
-                  ].map(m => (
-                    <button key={m.id} onClick={() => setPaymentMethod(m.id)}
-                      className={`p-3 rounded-xl text-center transition-all ${paymentMethod === m.id ? "bg-burnt-orange/15 text-burnt-orange border border-burnt-orange/30" : "glass text-cream/40 border border-cream/5 hover:border-cream/10"}`}>
-                      <div className="flex justify-center mb-1">{m.icon}</div>
-                      <p className="text-xs font-medium">{m.label}</p>
-                      <p className="text-[9px] text-cream/30 mt-0.5">{m.sub}</p>
-                    </button>
-                  ))}
+              {/* Payment Method — Razorpay Only */}
+              <div className="p-3 bg-burnt-orange/10 border border-burnt-orange/20 rounded-xl flex items-center gap-3">
+                <CreditCard size={18} className="text-burnt-orange" />
+                <div>
+                  <p className="text-cream text-sm font-medium">Razorpay Secure Payment</p>
+                  <p className="text-cream/40 text-[10px]">Cards, UPI, Net Banking, Wallets</p>
                 </div>
               </div>
 
@@ -314,7 +393,7 @@ function BookTripForm() {
               <button onClick={() => setStep(2)} className="glass px-6 py-3 rounded-full text-sm text-cream/50 hover:text-cream border border-cream/10">Back</button>
               <button onClick={handleBook} disabled={booking || !consentAccepted} className="btn-primary text-sm py-3 px-8 flex-1 disabled:opacity-40 disabled:cursor-not-allowed">
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  {paymentMethod === "Razorpay" ? <CreditCard size={14} /> : <Shield size={14} />}
+                  <CreditCard size={14} />
                   {booking ? "Processing..." : `Pay ₹${payableAmount.toLocaleString("en-IN")}`}
                 </span>
               </button>
@@ -323,32 +402,138 @@ function BookTripForm() {
         )}
       </AnimatePresence>
 
-      {/* Payment Modal for manual methods */}
-      <PaymentModal 
-        isOpen={showPaymentModal} 
-        onClose={(submitted) => { 
-          setShowPaymentModal(false); 
-          if (submitted) {
-            setDone(true); 
-          } else {
-            // User closed the modal without submitting UTR. Cancel the pending booking so they can try again.
-            if (bookingResult && (bookingResult._id || bookingResult.id)) {
-              fetch(`/api/bookings/${bookingResult._id || bookingResult.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "cancel", reason: "User aborted manual payment process" })
-              }).catch(e => console.error("Failed to cancel aborted booking:", e));
-            }
-            setBookingResult(null);
-            alert("Payment cancelled. You can try again when you are ready.");
-          }
-        }} 
-        method={manualMethod} 
-        amount={payableAmount} 
-        totalAmount={totalAmount} 
-        paymentMode={paymentMode} 
-        bookingId={bookingResult?.bookingId} 
-      />
+      {/* Booking Unavailable Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            {/* Darker Glassmorphism Background */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-md p-px rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(198,122,60,0.15)]"
+            >
+              {/* Animated Glowing Border Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-burnt-orange/50 via-[#0a1017] to-amber-500/20 blur-[2px]" />
+              
+              {/* Inner Container */}
+              <div className="relative bg-[#0a1017]/95 backdrop-blur-3xl p-6 sm:p-8 rounded-[2rem] overflow-hidden">
+                {/* Ambient Corner Glows */}
+                <div className="absolute -top-32 -right-32 w-64 h-64 bg-burnt-orange/20 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-teal/10 rounded-full blur-[80px] pointer-events-none" />
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="absolute top-5 right-5 text-cream/40 hover:text-cream transition-colors bg-white/5 hover:bg-white/10 rounded-full p-2 z-20 group"
+                >
+                  <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                </button>
+
+                <div className="relative z-10 mb-6 pt-1">
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.5, type: "spring" }}
+                    className="w-12 h-12 rounded-2xl bg-gradient-to-br from-burnt-orange/20 to-amber-500/5 text-burnt-orange border border-burnt-orange/20 flex items-center justify-center mb-4 shadow-[inset_0_2px_10px_rgba(198,122,60,0.2)]"
+                  >
+                    <Mountain size={24} className="drop-shadow-[0_0_8px_rgba(198,122,60,0.8)]" />
+                  </motion.div>
+                  
+                  <motion.h3 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-xl sm:text-2xl font-bold text-cream mb-4 font-[family-name:var(--font-heading)] leading-tight drop-shadow-md"
+                  >
+                    Trip Not Available Yet
+                  </motion.h3>
+
+                  {/* Cinematic Text Reveal */}
+                  <div className="space-y-2">
+                    <AnimatedStoryText 
+                      text="This journey is currently not available for instant booking, but that doesn't mean the adventure has to wait." 
+                      delay={0.3} 
+                    />
+                    <AnimatedStoryText 
+                      text="Many of our Himalayan experiences are organized in upcoming batches or can be arranged on special request for future dates. Connect with the Backpack Junction team and we'll personally guide you with availability, upcoming departures, custom planning, and everything you need to make this journey happen." 
+                      delay={0.8} 
+                    />
+                    <AnimatedStoryText 
+                      text="Your next Himalayan story might be closer than you think." 
+                      delay={2.2} 
+                      highlight={true}
+                      italic={true}
+                    />
+                  </div>
+                </div>
+
+                {/* 3D Premium Interactive Buttons */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 2.5, duration: 0.6 }}
+                  className="space-y-3 relative z-10"
+                >
+                  <a 
+                    href={`https://wa.me/919999999999?text=Hi!%20I'm%20interested%20in%20booking%20the%20trip%20to%20${encodeURIComponent(destinationParam || 'the Himalayas')}.`}
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="group relative w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-bold text-cream transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+                    style={{
+                      background: "linear-gradient(180deg, rgba(37,211,102,0.15) 0%, rgba(37,211,102,0.05) 100%)",
+                      border: "1px solid rgba(37,211,102,0.3)",
+                      boxShadow: "inset 0px 2px 4px rgba(255,255,255,0.05), 0px 8px 20px rgba(37,211,102,0.1)"
+                    }}
+                  >
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[#25D366]/10" />
+                    <MessageCircle size={18} className="relative z-10 text-[#25D366] group-hover:drop-shadow-[0_0_8px_rgba(37,211,102,0.8)] transition-all duration-300 group-hover:scale-110" />
+                    <span className="relative z-10 tracking-wide text-sm text-[#25D366] group-hover:text-white transition-colors duration-300">Chat on WhatsApp</span>
+                  </a>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <a 
+                      href="tel:+919999999999" 
+                      className="group relative w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-bold text-cream transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+                      style={{
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: "inset 0px 2px 4px rgba(255,255,255,0.02), 0px 8px 20px rgba(0,0,0,0.2)"
+                      }}
+                    >
+                      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/5" />
+                      <Phone size={16} className="relative z-10 text-cream/70 group-hover:text-cream transition-colors duration-300 group-hover:scale-110" />
+                      <span className="relative z-10 tracking-wide text-sm text-cream/80 group-hover:text-cream transition-colors duration-300">Call Us</span>
+                    </a>
+
+                    <Link 
+                      href="/contact" 
+                      className="group relative w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-bold text-cream transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 active:shadow-inner"
+                      style={{
+                        background: "linear-gradient(180deg, #D4842A 0%, #C67A3C 100%)",
+                        boxShadow: "inset 0px 2px 4px rgba(255,255,255,0.3), inset 0px -4px 8px rgba(0,0,0,0.2), 0px 8px 20px rgba(198,122,60,0.4)"
+                      }}
+                    >
+                      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-transparent to-white/10" />
+                      <Mail size={16} className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-300" />
+                      <span className="relative z-10 tracking-wide text-sm drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]">Contact Us</span>
+                    </Link>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

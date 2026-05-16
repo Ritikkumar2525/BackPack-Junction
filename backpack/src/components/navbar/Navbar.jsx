@@ -132,7 +132,7 @@ export default function Navbar() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 top-14 w-64 glass-card p-2 shadow-2xl z-50 pt-2"
+                      className="absolute right-0 top-14 w-64 bg-[#0C1420]/95 backdrop-blur-xl border border-cream/10 rounded-2xl p-2 shadow-2xl z-50 pt-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="px-4 py-3 border-b border-cream/5">

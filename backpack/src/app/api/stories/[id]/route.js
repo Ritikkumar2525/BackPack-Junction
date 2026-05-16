@@ -49,7 +49,7 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Story ID is required" }, { status: 400 });
     }
 
-    const updatedStory = await Story.findByIdAndUpdate(id, { status: body.status }, { new: true });
+    const updatedStory = await Story.findByIdAndUpdate(id, { status: body.status }, { returnDocument: "after" });
     
     if (!updatedStory) {
       return NextResponse.json({ error: "Story not found" }, { status: 404 });

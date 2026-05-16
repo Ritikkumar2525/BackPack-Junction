@@ -1,34 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
+import { MapPin, Mail, Phone, MessageCircle, ChevronDown, Send, CheckCircle, ExternalLink } from "lucide-react";
+import toast from "react-hot-toast";
 
-const contactInfo = [
+const contactCards = [
   {
-    icon: "📍",
-    label: "Office",
-    value: "Rishikesh, Uttarakhand, India",
-    detail: "Near Laxman Jhula, 249302",
+    icon: MapPin,
+    label: "Our Location",
+    value: "New Delhi, India",
+    detail: "Available for meetings by appointment",
+    color: "from-rose-500/20 to-rose-600/5",
+    iconColor: "text-rose-400",
+    action: "https://maps.google.com/?q=New+Delhi,India",
+    actionLabel: "View on Maps",
   },
   {
-    icon: "📧",
-    label: "Email",
-    value: "hello@backpack.travel",
+    icon: Mail,
+    label: "Email Us",
+    value: "junctionbackpack@gmail.com",
     detail: "We reply within 24 hours",
+    color: "from-teal/20 to-teal/5",
+    iconColor: "text-teal",
+    action: "mailto:junctionbackpack@gmail.com",
+    actionLabel: "Send Email",
   },
   {
-    icon: "📞",
-    label: "Phone",
-    value: "+91 98765 43210",
-    detail: "Mon-Sat, 9AM-8PM IST",
+    icon: Phone,
+    label: "Call Us",
+    value: "+91 85950 54501",
+    detail: "Mon–Sat, 9AM–8PM IST",
+    color: "from-burnt-orange/20 to-burnt-orange/5",
+    iconColor: "text-burnt-orange",
+    action: "tel:+918595054501",
+    actionLabel: "Call Now",
   },
   {
-    icon: "💬",
+    icon: MessageCircle,
     label: "WhatsApp",
-    value: "+91 98765 43210",
+    value: "+91 82870 54501",
     detail: "Quick responses, trip queries",
+    color: "from-green-500/20 to-green-600/5",
+    iconColor: "text-green-400",
+    action: "https://wa.me/918287054501",
+    actionLabel: "Chat Now",
   },
 ];
 
@@ -55,40 +73,53 @@ const faqs = [
   },
 ];
 
+const inputClass =
+  "w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 text-cream text-sm placeholder:text-cream/30 focus:outline-none focus:border-burnt-orange/60 focus:bg-white/8 transition-all duration-300";
+
 export default function ContactPage() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSending(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSent(true);
+        toast.success("Message sent successfully!");
+      } else {
+        toast.error(data.error || "Failed to send. Please try again.");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-    <main className="relative overflow-x-hidden">
+    <main className="relative overflow-x-hidden bg-transparent">
       <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-deep/50 to-midnight pointer-events-none" />
+      <section className="relative pt-32 pb-12 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-deep/40 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-teal/5 blur-[120px] rounded-full pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <span className="text-xs uppercase tracking-[4px] text-teal mb-4 block">
-              Get in Touch
-            </span>
-            <h1 className="font-[family-name:var(--font-heading)] text-5xl md:text-7xl font-bold text-cream mb-4">
-              Contact <span className="gradient-text-cool">Us</span>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <span className="text-xs font-bold uppercase tracking-[5px] text-teal mb-4 block">Get in Touch</span>
+            <h1 className="font-[family-name:var(--font-heading)] text-5xl md:text-7xl font-bold text-cream mb-5">
+              Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-teal/60">Us</span>
             </h1>
-            <p className="text-cream/40 text-lg max-w-xl mx-auto">
+            <p className="text-cream/50 text-lg max-w-xl mx-auto leading-relaxed">
               Have a question, want a custom trip, or just want to say hi?
               We&apos;d love to hear from you.
             </p>
@@ -96,116 +127,152 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Contact Info Cards */}
+      {/* Contact Cards */}
       <section className="pb-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {contactInfo.map((c, i) => (
-              <motion.div
-                key={c.label}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 text-center group"
-              >
-                <span className="text-3xl mb-3 block group-hover:scale-110 transition-transform">
-                  {c.icon}
-                </span>
-                <p className="text-cream font-semibold text-sm mb-1">
-                  {c.value}
-                </p>
-                <p className="text-cream/30 text-xs">{c.detail}</p>
-              </motion.div>
-            ))}
+            {contactCards.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <motion.a
+                  href={card.action}
+                  target={card.action.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                  key={card.label}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  whileHover={{ y: -6, scale: 1.02 }}
+                  className={`relative group bg-gradient-to-br ${card.color} border border-white/10 hover:border-white/20 rounded-2xl p-6 text-center block cursor-pointer transition-all duration-300 overflow-hidden backdrop-blur-sm`}
+                >
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/3 transition-colors duration-300 rounded-2xl" />
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10 mb-4 group-hover:scale-110 transition-transform duration-300 ${card.iconColor}`}>
+                    <Icon size={22} />
+                  </div>
+                  <p className="text-[11px] uppercase tracking-[3px] font-bold text-cream/40 mb-2">{card.label}</p>
+                  <p className="text-cream font-semibold text-sm leading-snug mb-2">{card.value}</p>
+                  <p className="text-cream/40 text-xs mb-4">{card.detail}</p>
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${card.iconColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
+                    {card.actionLabel} <ExternalLink size={11} />
+                  </span>
+                </motion.a>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Contact Form + FAQs */}
-      <section className="section-padding relative">
+      {/* Form + FAQs */}
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Form */}
+          <div className="grid lg:grid-cols-2 gap-12 xl:gap-20">
+
+            {/* Contact Form */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
             >
-              <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-cream mb-2">
+              <span className="text-xs font-bold uppercase tracking-[4px] text-burnt-orange mb-3 block">Drop a Line</span>
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold text-cream mb-3">
                 Send a Message
               </h2>
-              <p className="text-cream/40 text-sm mb-8">
-                We usually respond within 24 hours.
+              <p className="text-cream/40 text-sm mb-8 leading-relaxed">
+                Fill in the form below and we&apos;ll get back to you within 24 hours. Whether it&apos;s a trip inquiry, collaboration, or just saying hello — we love it all.
               </p>
 
-              {!submitted ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Your Name"
-                      required
-                      value={form.name}
-                      onChange={(e) =>
-                        setForm({ ...form, name: e.target.value })
-                      }
-                      className="glass rounded-xl px-5 py-4 text-cream/90 placeholder-white/25 text-sm outline-none border border-transparent focus:border-teal/30 transition-colors w-full"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Your Email"
-                      required
-                      value={form.email}
-                      onChange={(e) =>
-                        setForm({ ...form, email: e.target.value })
-                      }
-                      className="glass rounded-xl px-5 py-4 text-cream/90 placeholder-white/25 text-sm outline-none border border-transparent focus:border-teal/30 transition-colors w-full"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Subject"
-                    value={form.subject}
-                    onChange={(e) =>
-                      setForm({ ...form, subject: e.target.value })
-                    }
-                    className="glass rounded-xl px-5 py-4 text-cream/90 placeholder-white/25 text-sm outline-none border border-transparent focus:border-teal/30 transition-colors w-full"
-                  />
-                  <textarea
-                    placeholder="Your Message"
-                    required
-                    rows={5}
-                    value={form.message}
-                    onChange={(e) =>
-                      setForm({ ...form, message: e.target.value })
-                    }
-                    className="glass rounded-xl px-5 py-4 text-cream/90 placeholder-white/25 text-sm outline-none border border-transparent focus:border-teal/30 transition-colors w-full resize-none"
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    className="btn-primary w-full py-4"
+              <AnimatePresence mode="wait">
+                {!sent ? (
+                  <motion.form
+                    key="form"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    onSubmit={handleSubmit}
+                    className="space-y-4"
                   >
-                    <span className="relative z-10">Send Message ✨</span>
-                  </motion.button>
-                </form>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="glass-card p-10 text-center"
-                >
-                  <span className="text-5xl mb-4 block">🏔️</span>
-                  <h3 className="text-cream text-xl font-semibold mb-2">
-                    Message Sent!
-                  </h3>
-                  <p className="text-cream/40 text-sm">
-                    We&apos;ll get back to you within 24 hours. Keep the
-                    adventure spirit alive!
-                  </p>
-                </motion.div>
-              )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-cream/50 mb-1.5 font-medium">Your Name *</label>
+                        <input
+                          type="text" required placeholder="Arjun Sharma"
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-cream/50 mb-1.5 font-medium">Email Address *</label>
+                        <input
+                          type="email" required placeholder="arjun@email.com"
+                          value={form.email}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cream/50 mb-1.5 font-medium">Subject</label>
+                      <input
+                        type="text" placeholder="Trip inquiry / Custom journey / General question"
+                        value={form.subject}
+                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-cream/50 mb-1.5 font-medium">Your Message *</label>
+                      <textarea
+                        required placeholder="Tell us about your dream Himalayan experience..."
+                        rows={5}
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        className={`${inputClass} resize-none`}
+                      />
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={sending}
+                      className="flex items-center justify-center gap-3 w-full bg-burnt-orange hover:bg-burnt-orange/90 disabled:opacity-60 text-white font-semibold py-4 rounded-xl transition-all duration-300 shadow-lg shadow-burnt-orange/20 hover:shadow-burnt-orange/30"
+                    >
+                      {sending ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={18} />
+                          Send Message
+                        </>
+                      )}
+                    </motion.button>
+                  </motion.form>
+                ) : (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center text-center py-16 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm"
+                  >
+                    <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 ring-2 ring-emerald-500/30">
+                      <CheckCircle size={32} className="text-emerald-400" />
+                    </div>
+                    <h3 className="text-cream text-2xl font-bold font-[family-name:var(--font-heading)] mb-3">Message Sent!</h3>
+                    <p className="text-cream/50 text-sm max-w-xs leading-relaxed">
+                      We&apos;ll get back to you within 24 hours. Keep the adventure spirit alive! 🏔️
+                    </p>
+                    <button
+                      onClick={() => { setSent(false); setForm({ name: "", email: "", subject: "", message: "" }); }}
+                      className="mt-8 text-sm text-burnt-orange hover:text-burnt-orange/80 font-medium transition-colors"
+                    >
+                      Send another message →
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* FAQs */}
@@ -213,45 +280,68 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
             >
-              <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-cream mb-2">
+              <span className="text-xs font-bold uppercase tracking-[4px] text-teal mb-3 block">Quick Answers</span>
+              <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold text-cream mb-3">
                 FAQs
               </h2>
-              <p className="text-cream/40 text-sm mb-8">
-                Quick answers to common questions.
+              <p className="text-cream/40 text-sm mb-8 leading-relaxed">
+                Answers to the most common questions we receive from fellow adventurers.
               </p>
 
               <div className="space-y-3">
                 {faqs.map((faq, i) => (
-                  <div key={i} className="glass-card overflow-hidden">
+                  <div
+                    key={i}
+                    className={`rounded-xl border transition-all duration-300 overflow-hidden ${openFaq === i ? "border-burnt-orange/30 bg-burnt-orange/5" : "border-white/8 bg-white/3 hover:bg-white/5 hover:border-white/15"}`}
+                  >
                     <button
                       onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                      className="w-full flex items-center justify-between p-5 text-left"
+                      className="w-full flex items-center justify-between p-5 text-left gap-4"
                     >
-                      <span className="text-cream text-sm font-medium pr-4">
-                        {faq.q}
-                      </span>
-                      <motion.span
+                      <span className="text-cream text-sm font-semibold leading-snug">{faq.q}</span>
+                      <motion.div
                         animate={{ rotate: openFaq === i ? 180 : 0 }}
-                        className="text-cream/40 text-lg flex-shrink-0"
+                        transition={{ duration: 0.25 }}
+                        className={`flex-shrink-0 transition-colors ${openFaq === i ? "text-burnt-orange" : "text-cream/30"}`}
                       >
-                        ↓
-                      </motion.span>
+                        <ChevronDown size={18} />
+                      </motion.div>
                     </button>
-                    <motion.div
-                      initial={false}
-                      animate={{
-                        height: openFaq === i ? "auto" : 0,
-                        opacity: openFaq === i ? 1 : 0,
-                      }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-5 pb-5 text-cream/40 text-sm leading-relaxed">
-                        {faq.a}
-                      </p>
-                    </motion.div>
+                    <AnimatePresence initial={false}>
+                      {openFaq === i && (
+                        <motion.div
+                          key="content"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <p className="px-5 pb-5 text-cream/55 text-sm leading-relaxed border-t border-white/8 pt-4">
+                            {faq.a}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ))}
+              </div>
+
+              {/* Quick Connect Nudge */}
+              <div className="mt-10 p-6 bg-gradient-to-br from-burnt-orange/10 to-burnt-orange/5 border border-burnt-orange/20 rounded-2xl">
+                <p className="text-cream font-semibold text-sm mb-1">Still have questions?</p>
+                <p className="text-cream/50 text-xs mb-4">Chat directly on WhatsApp for instant answers from our team.</p>
+                <a
+                  href="https://wa.me/918287054501"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300"
+                >
+                  <MessageCircle size={16} />
+                  WhatsApp Us
+                </a>
               </div>
             </motion.div>
           </div>

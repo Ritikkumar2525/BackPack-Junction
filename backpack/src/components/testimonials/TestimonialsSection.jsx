@@ -3,22 +3,46 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
-import { testimonials } from "@/data/destinations";
+import { testimonials as staticTestimonials } from "@/data/destinations";
 import Image from "next/image";
 
 export default function TestimonialsSection() {
   const [active, setActive] = useState(0);
-  const t = testimonials[active];
+  const [allTestimonials, setAllTestimonials] = useState(staticTestimonials);
 
-  const next = () => setActive((prev) => (prev + 1) % testimonials.length);
-  const prev = () => setActive((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  useEffect(() => {
+    // Fetch featured reviews from database
+    fetch("/api/reviews?featured=true")
+      .then(r => r.json())
+      .then(data => {
+        if (data.reviews?.length > 0) {
+          const dbReviews = data.reviews.map(r => ({
+            name: r.userId?.name || "Traveler",
+            avatar: r.userId?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.userId?.name || "T")}&background=C67A3C&color=fff`,
+            quote: r.review,
+            rating: r.rating,
+            trip: r.tripId?.title || "Adventure Trip",
+            location: r.tripId?.destination || "India",
+            isDb: true,
+          }));
+          // DB reviews first, then static fallbacks
+          setAllTestimonials([...dbReviews, ...staticTestimonials]);
+        }
+      })
+      .catch(() => {}); // Silently fall back to static
+  }, []);
+
+  const t = allTestimonials[active];
+
+  const next = () => setActive((prev) => (prev + 1) % allTestimonials.length);
+  const prev = () => setActive((prev) => (prev - 1 + allTestimonials.length) % allTestimonials.length);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setActive((prev) => (prev + 1) % testimonials.length);
+      setActive((prev) => (prev + 1) % allTestimonials.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [allTestimonials.length]);
 
   return (
     <section className="py-32 relative overflow-hidden">
@@ -114,7 +138,7 @@ export default function TestimonialsSection() {
           {/* Navigation */}
           <div className="flex items-center justify-between mt-10 pt-6 border-t border-cream/5">
             <div className="flex gap-2">
-              {testimonials.map((_, i) => (
+              {allTestimonials.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setActive(i)}

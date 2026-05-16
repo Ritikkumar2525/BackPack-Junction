@@ -13,7 +13,7 @@ export default function GalleryPage() {
   useEffect(() => {
     async function fetchPhotos() {
       try {
-        const res = await fetch("/api/stories");
+        const res = await fetch("/api/gallery?limit=100");
         if (res.ok) {
           const data = await res.json();
           setImages(data);
@@ -28,11 +28,11 @@ export default function GalleryPage() {
   }, []);
 
   return (
-    <main className="relative overflow-x-hidden bg-[#0a0f18] min-h-screen">
+    <main className="relative overflow-x-hidden bg-transparent min-h-screen">
       <Navbar />
 
       <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0C1420] to-[#0a0f18] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0C1420]/80 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -57,10 +57,14 @@ export default function GalleryPage() {
             <div className="flex justify-center items-center h-64">
               <div className="w-12 h-12 border-4 border-burnt-orange border-t-transparent rounded-full animate-spin"></div>
             </div>
+          ) : images.length === 0 ? (
+            <div className="text-center text-cream/40 h-64 flex items-center justify-center">
+              <p>No memories uploaded yet.</p>
+            </div>
           ) : (
             <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
               {images.map((img, i) => {
-                const isVideo = img.image?.startsWith('data:video');
+                const isVideo = img.mediaType === 'video';
                 return (
                   <motion.div
                     key={img._id || i}
@@ -73,13 +77,13 @@ export default function GalleryPage() {
                     <div className="relative rounded-2xl overflow-hidden shadow-xl border border-cream/5">
                       {isVideo ? (
                         <video
-                          src={img.image}
+                          src={img.url}
                           autoPlay loop muted playsInline
                           className="w-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                       ) : (
                         <img
-                          src={img.image}
+                          src={img.url}
                           alt={img.title}
                           loading="lazy"
                           className="w-full object-cover transition-transform duration-700 group-hover:scale-105 bg-[#0C1420]"
@@ -94,7 +98,7 @@ export default function GalleryPage() {
                         <p className="text-cream font-semibold text-sm">
                           {img.title}
                         </p>
-                        <p className="text-cream/50 text-xs">by {img.author}</p>
+                        <p className="text-cream/50 text-xs">by {img.uploadedBy?.name || 'Anonymous'}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -122,15 +126,15 @@ export default function GalleryPage() {
               className="relative max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden w-full flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
-              {images[lightbox].image?.startsWith('data:video') ? (
+              {images[lightbox].mediaType === 'video' ? (
                 <video
-                  src={images[lightbox].image}
+                  src={images[lightbox].url}
                   autoPlay loop playsInline controls
                   className="w-full h-full object-contain"
                 />
               ) : (
                 <img
-                  src={images[lightbox].image}
+                  src={images[lightbox].url}
                   alt={images[lightbox].title}
                   className="w-full h-full object-contain bg-[#0C1420]"
                   onError={(e) => {
@@ -145,7 +149,7 @@ export default function GalleryPage() {
                   {images[lightbox].title}
                 </p>
                 <p className="text-cream/50 text-sm">
-                  by {images[lightbox].author}
+                  by {images[lightbox].uploadedBy?.name || 'Anonymous'}
                 </p>
               </div>
               <button

@@ -1,7 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Phone, MessageCircle, X, Loader2, Mail } from "lucide-react";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 
@@ -167,14 +170,7 @@ const defaultItinerary = [
   },
 ];
 
-const galleryImages = [
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80",
-  "https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600&q=80",
-  "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
-  "https://images.unsplash.com/photo-1580289437401-1a5b5be2dbe0?w=600&q=80",
-  "https://images.unsplash.com/photo-1597074866923-dc0589150a53?w=600&q=80",
-];
+// The hardcoded galleryImages array has been removed in favor of dynamic dest.gallery from the database.
 
 const essentials = [
   { icon: "🗓️", label: "Best Season", key: "bestSeason" },
@@ -186,6 +182,9 @@ const essentials = [
 ];
 
 export default function DestinationPage({ destination: dest }) {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(false);
+
   const itinerary = itineraryData[dest.id] || defaultItinerary;
   const diffColor = {
     Easy: "text-teal",
@@ -193,6 +192,13 @@ export default function DestinationPage({ destination: dest }) {
     Challenging: "text-burnt-orange",
     Extreme: "text-red-400",
   };
+
+  const handleBookClick = async () => {
+    setIsChecking(true);
+    router.push(`/dashboard/book-trip?destination=${encodeURIComponent(dest.name)}`);
+  };
+
+  const currentGallery = dest.gallery && dest.gallery.length > 0 ? dest.gallery : [];
 
   return (
     <main className="relative overflow-x-hidden">
@@ -212,7 +218,7 @@ export default function DestinationPage({ destination: dest }) {
             }}
             className="absolute inset-0"
             style={{
-              backgroundImage: `url('${dest.image}')`,
+              backgroundImage: `url('${dest?.image || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"}')`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
@@ -256,23 +262,32 @@ export default function DestinationPage({ destination: dest }) {
           >
             <div>
               <span className="text-burnt-orange text-xs uppercase tracking-[4px] font-semibold mb-2 block">
-                {dest.tagline}
+                {dest?.tagline || "Explore"}
               </span>
               <h1 className="font-[family-name:var(--font-heading)] text-5xl md:text-7xl font-bold text-cream mb-3">
-                {dest.name}
+                {dest?.name || "Destination"}
               </h1>
               <p className="text-cream/50 text-lg max-w-xl leading-relaxed">
-                {dest.description}
+                {dest?.description || "Experience the breathtaking beauty of this amazing destination."}
               </p>
             </div>
             <div className="flex gap-3">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="btn-primary py-3 px-8"
+                onClick={handleBookClick}
+                disabled={isChecking}
+                className="btn-primary py-3 px-8 min-w-[220px] flex justify-center items-center"
               >
-                <span className="relative z-10">
-                  Book Trip — ₹{dest.price.toLocaleString()}
+                <span className="relative z-10 flex items-center gap-2">
+                  {isChecking ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    `Book Trip — ₹${dest?.price ? Number(dest.price).toLocaleString('en-IN') : 'N/A'}`
+                  )}
                 </span>
               </motion.button>
               <motion.button
@@ -302,9 +317,9 @@ export default function DestinationPage({ destination: dest }) {
                 {e.label}
               </p>
               <p
-                className={`text-sm font-semibold ${e.key === "difficulty" ? diffColor[dest[e.key]] : "text-cream/80"}`}
+                className={`text-sm font-semibold ${e.key === "difficulty" ? diffColor[dest?.[e.key]] || "text-cream/80" : "text-cream/80"}`}
               >
-                {String(dest[e.key])}
+                {dest?.[e.key] ? String(dest[e.key]) : "N/A"}
               </p>
             </div>
           ))}
@@ -370,66 +385,68 @@ export default function DestinationPage({ destination: dest }) {
       </section>
 
       {/* Gallery */}
-      <section className="section-padding relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="text-xs uppercase tracking-[4px] text-burnt-orange mb-4 block">
-              Visual Stories
-            </span>
-            <h2 className="section-title text-cream">
-              Photo <span className="gradient-text-warm">Gallery</span>
-            </h2>
-          </div>
+      {currentGallery.length > 0 && (
+        <section className="section-padding relative">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <span className="text-xs uppercase tracking-[4px] text-burnt-orange mb-4 block">
+                Visual Stories
+              </span>
+              <h2 className="section-title text-cream">
+                Photo <span className="gradient-text-warm">Gallery</span>
+              </h2>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {galleryImages.map((img, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative overflow-hidden rounded-2xl group cursor-pointer ${i === 0 ? "row-span-2" : ""}`}
-              >
-                <img
-                  src={img}
-                  alt={`${dest.name} gallery ${i + 1}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover min-h-[200px] transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400";
-                  }}
-                />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {currentGallery.slice(0, 6).map((img, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`relative overflow-hidden rounded-2xl group cursor-pointer ${i === 0 ? "row-span-2" : ""}`}
+                >
+                  <img
+                    src={img}
+                    alt={`${dest?.name || 'Destination'} gallery ${i + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover min-h-[200px] transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400";
+                    }}
+                  />
 
-                <div className="absolute inset-0 bg-midnight/0 group-hover:bg-midnight/30 transition-colors duration-300 flex items-center justify-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    whileHover={{ scale: 1 }}
-                    className="w-12 h-12 glass rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="2"
+                  <div className="absolute inset-0 bg-midnight/0 group-hover:bg-midnight/30 transition-colors duration-300 flex items-center justify-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileHover={{ scale: 1 }}
+                      className="w-12 h-12 glass rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <circle cx="11" cy="11" r="8" />
-                      <path d="m21 21-4.3-4.3" />
-                      <path d="M11 8v6" />
-                      <path d="M8 11h6" />
-                    </svg>
-                  </motion.div>
-                </div>
-              </motion.div>
-            ))}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="2"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                        <path d="M11 8v6" />
+                        <path d="M8 11h6" />
+                      </svg>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Booking CTA */}
       <section className="section-padding">
@@ -442,7 +459,7 @@ export default function DestinationPage({ destination: dest }) {
           >
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-burnt-orange/10 rounded-full blur-[120px] pointer-events-none" />
             <h2 className="font-[family-name:var(--font-heading)] text-3xl md:text-5xl font-bold text-cream mb-4 relative z-10">
-              Ready for <span className="gradient-text-warm">{dest.name}</span>?
+              Ready for <span className="gradient-text-warm">{dest?.name || "this Adventure"}</span>?
             </h2>
             <p className="text-cream/40 text-lg mb-8 max-w-lg mx-auto relative z-10">
               Join our next group trip or plan a custom journey. Your Himalayan
@@ -453,9 +470,10 @@ export default function DestinationPage({ destination: dest }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="btn-primary text-lg px-10 py-4"
+                onClick={() => window.location.href = `/dashboard/book-trip?destination=${encodeURIComponent(dest?.name || "")}`}
               >
                 <span className="relative z-10">
-                  Book Now — ₹{dest.price.toLocaleString()}
+                  Book Now — ₹{dest?.price ? Number(dest.price).toLocaleString('en-IN') : 'N/A'}
                 </span>
               </motion.button>
               <motion.button

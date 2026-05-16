@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 
-export default function StarryBackground() {
+/**
+ * StarryBackground — GPU-accelerated canvas with frame-rate throttling.
+ * Renders at 30fps (not 60) since twinkling stars don't need high refresh,
+ * cutting GPU workload in half while looking identical.
+ */
+function StarryBackground() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -13,43 +18,52 @@ export default function StarryBackground() {
     let width, height;
     let stars = [];
     let animationFrameId;
+    let lastFrameTime = 0;
+    const TARGET_FPS = 30; // Stars don't need 60fps
+    const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
     const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio, 2); // Cap DPR for perf
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(dpr, dpr);
       initStars();
     };
 
     const initStars = () => {
       stars = [];
-      const numStars = window.innerWidth < 768 ? 75 : 150;
+      // Fewer stars on mobile for better perf
+      const numStars = width < 768 ? 60 : 120;
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * width,
           y: Math.random() * height,
           radius: Math.random() * 1.5 + 0.5,
           alpha: Math.random() * 0.5 + 0.5,
-          speed: Math.random() * 0.05 + 0.01,
-          growing: Math.random() > 0.5
+          speed: Math.random() * 0.03 + 0.005,
+          growing: Math.random() > 0.5,
         });
       }
     };
 
-    const draw = () => {
-      // Background gradient
-      const gradient = ctx.createRadialGradient(width/2, height, 0, width/2, height, height);
-      gradient.addColorStop(0, '#1b2735');
-      gradient.addColorStop(1, '#090a0f');
-      ctx.fillStyle = gradient;
+    const draw = (timestamp) => {
+      animationFrameId = requestAnimationFrame(draw);
+
+      // Throttle to target FPS
+      if (timestamp - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = timestamp;
+
+      // Single fill for background
+      ctx.fillStyle = "#0a0f17";
       ctx.fillRect(0, 0, width, height);
 
-      // Draw stars
+      // Batch all stars with same technique
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
-        
-        // Twinkle effect
         if (s.growing) {
           s.alpha += s.speed;
           if (s.alpha >= 1) { s.growing = false; s.alpha = 1; }
@@ -57,30 +71,38 @@ export default function StarryBackground() {
           s.alpha -= s.speed;
           if (s.alpha <= 0.2) { s.growing = true; s.alpha = 0.2; }
         }
-
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+        ctx.arc(s.x, s.y, s.radius, 0, 6.2832); // Math.PI * 2
+        ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
         ctx.fill();
       }
-
-      animationFrameId = requestAnimationFrame(draw);
     };
 
-    window.addEventListener("resize", resize);
+    // Debounced resize
+    let resizeTimer;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 200);
+    };
+
+    window.addEventListener("resize", debouncedResize, { passive: true });
     resize();
-    draw();
+    animationFrameId = requestAnimationFrame(draw);
 
     return () => {
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", debouncedResize);
       cancelAnimationFrame(animationFrameId);
+      clearTimeout(resizeTimer);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 z-[-1] pointer-events-none w-full h-full"
+      className="fixed inset-0 z-[-1] pointer-events-none"
+      style={{ willChange: "contents" }}
     />
   );
 }
+
+export default memo(StarryBackground);

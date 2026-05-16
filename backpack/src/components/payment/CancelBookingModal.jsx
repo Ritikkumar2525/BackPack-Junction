@@ -43,7 +43,7 @@ export default function CancelBookingModal({ isOpen, onClose, booking, onCancelS
     }
   };
 
-  const refundPolicy = booking.cancellationPolicy?.nonRefundablePerHead || 1000;
+  const refundPolicy = booking.cancellationPolicy?.nonRefundablePerHead || 1500;
   const travellers = booking.travellers?.length || 1;
   const totalDeduction = refundPolicy * travellers;
   const expectedRefund = Math.max(0, (booking.amountPaid || 0) - totalDeduction);

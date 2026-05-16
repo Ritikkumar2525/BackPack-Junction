@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, MapPin, CalendarCheck, ImagePlus, Users, BarChart3, LogOut, Menu, X, ChevronRight, Settings, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, MapPin, CalendarCheck, ImagePlus, Users, BarChart3, LogOut, Menu, X, ChevronRight, Settings, AlertTriangle, Star } from "lucide-react";
 
 const adminLinks = [
   { href: "/admin", label: "Analytics", icon: BarChart3 },
@@ -15,7 +15,9 @@ const adminLinks = [
   { href: "/admin/bookings", label: "All Bookings", icon: CalendarCheck },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/cancellations", label: "Cancellations", icon: AlertTriangle },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/gallery", label: "Gallery", icon: ImagePlus },
+  { href: "/admin/blogs", label: "Blogs", icon: LayoutDashboard },
 ];
 
 export default function AdminLayout({ children }) {

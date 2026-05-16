@@ -7,6 +7,14 @@ import { MapPin, Clock, ArrowRight } from "lucide-react";
 import { destinations } from "@/data/destinations";
 import Image from "next/image";
 
+const difficultyColors = {
+  Easy: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  Moderate: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  Challenging: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+  Extreme: "bg-red-500/20 text-red-400 border-red-500/30",
+  default: "bg-cream/10 text-cream/90 border-cream/20"
+};
+
 function DestinationCard({ dest, index }) {
   return (
     <motion.div
@@ -18,62 +26,67 @@ function DestinationCard({ dest, index }) {
         duration: 0.7,
         ease: [0.23, 1, 0.32, 1],
       }}
+      className="h-full"
     >
-      <Link href={`/destinations/${dest.id}`} className="block group">
-        <div className="relative rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer bg-[#0C1420]">
+      <Link href={`/destinations/${dest.id}`} className="block group h-full">
+        <div className="relative rounded-[2rem] overflow-hidden aspect-[3/4] cursor-pointer bg-[#0C1420] shadow-xl hover:shadow-2xl hover:shadow-burnt-orange/10 transition-shadow duration-500 h-full border border-cream/5">
           {/* Image */}
           <Image
             src={dest.image}
             alt={dest.name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="absolute inset-0 object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+            className="absolute inset-0 object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
           />
 
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          {/* Premium Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0C1420] via-[#0C1420]/50 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-700" />
 
           {/* Hover glow */}
           <div className="absolute inset-0 bg-burnt-orange/0 group-hover:bg-burnt-orange/5 transition-colors duration-700" />
 
-          {/* Top badge */}
-          <div className="absolute top-5 left-5 z-10">
-            <span className="text-[10px] font-semibold uppercase tracking-[2px] px-3 py-1.5 rounded-full backdrop-blur-md bg-cream/10 text-cream/90 border border-cream/10">
+          {/* Top Info Bar */}
+          <div className="absolute top-5 left-5 right-5 z-10 flex justify-between items-start">
+            <span className={`text-[10px] font-bold uppercase tracking-[2px] px-3.5 py-1.5 rounded-full backdrop-blur-md border ${difficultyColors[dest.difficulty] || difficultyColors.default}`}>
               {dest.difficulty}
             </span>
+            <div className="flex items-center gap-1.5 text-cream/90 text-xs font-medium bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-cream/10">
+              <Clock size={12} className="text-burnt-orange" />
+              <span>{dest.duration}</span>
+            </div>
           </div>
 
           {/* Bottom content */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-            {/* Price */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-cream/50 text-xs">
-                <Clock size={12} />
-                <span>{dest.duration}</span>
+          <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex flex-col justify-end h-full">
+            <div className="transform translate-y-6 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+              
+              {/* Name & tagline */}
+              <h3 className="font-[family-name:var(--font-heading)] text-3xl md:text-4xl font-bold text-cream mb-2 group-hover:text-burnt-orange transition-colors duration-500 drop-shadow-lg">
+                {dest.name}
+              </h3>
+              
+              <div className="flex items-center gap-1.5 text-cream/70 text-sm mb-4 drop-shadow-md">
+                <MapPin size={14} className="text-burnt-orange flex-shrink-0" />
+                <span className="truncate">{dest.tagline}</span>
               </div>
-              <span className="text-cream font-bold text-lg">
-                ₹{dest.price.toLocaleString()}
-              </span>
-            </div>
 
-            {/* Name & tagline */}
-            <h3 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-cream mb-1 group-hover:text-burnt-orange transition-colors duration-500">
-              {dest.name}
-            </h3>
-            <div className="flex items-center gap-1.5 text-cream/40 text-sm mb-4">
-              <MapPin size={13} />
-              <span>{dest.tagline}</span>
-            </div>
+              {/* Price & CTA Row */}
+              <div className="flex items-end justify-between mt-4 pt-4 border-t border-cream/10">
+                <div>
+                  <span className="text-cream/50 text-[10px] uppercase tracking-wider block mb-0.5">Starting From</span>
+                  <span className="text-cream font-bold text-xl drop-shadow-md">
+                    ₹{(dest.price || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                
+                {/* CTA — fades in on hover */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-burnt-orange text-cream shadow-lg hover:bg-[#D4842A] hover:scale-110 transition-all">
+                    <ArrowRight size={18} className="-rotate-45 group-hover:rotate-0 transition-transform duration-300" />
+                  </span>
+                </div>
+              </div>
 
-            {/* CTA — slides up on hover */}
-            <div className="translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
-              <span className="inline-flex items-center gap-2 text-burnt-orange text-sm font-medium">
-                Explore
-                <ArrowRight
-                  size={16}
-                  className="group-hover:translate-x-1 transition-transform"
-                />
-              </span>
             </div>
           </div>
         </div>
@@ -93,7 +106,11 @@ export default function TrendingDestinations() {
         const res = await fetch("/api/destinations");
         if (res.ok) {
           const data = await res.json();
-          setAllDestinations(data);
+          if (Array.isArray(data)) {
+            setAllDestinations(data);
+          } else {
+            console.error("Destinations API did not return an array:", data);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch destinations:", err);

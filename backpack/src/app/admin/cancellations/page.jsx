@@ -164,10 +164,10 @@ export default function AdminCancellations() {
                 <div className="glass p-5 rounded-xl space-y-3">
                   <h3 className="text-sm font-semibold text-cream border-b border-cream/5 pb-2">Financial Overview</h3>
                   <div className="flex justify-between text-sm"><span className="text-cream/50">Total Paid by User</span><span className="text-cream">₹{selectedReq.amountPaid?.toLocaleString()}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-cream/50">Non-Refundable Policy</span><span className="text-red-400">₹{selectedReq.cancellationPolicy?.nonRefundablePerHead || 1000} / head</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-cream/50">Non-Refundable Policy</span><span className="text-red-400">₹{selectedReq.cancellationPolicy?.nonRefundablePerHead || 1500} / head</span></div>
                   <div className="flex justify-between text-sm"><span className="text-cream/50">Total Travellers</span><span className="text-cream">{selectedReq.travellers?.length || 1}</span></div>
                   <div className="h-px bg-cream/5 my-2" />
-                  <div className="flex justify-between text-sm font-bold"><span className="text-emerald-400">Suggested Refund</span><span className="text-emerald-400">₹{Math.max(0, (selectedReq.amountPaid || 0) - ((selectedReq.cancellationPolicy?.nonRefundablePerHead || 1000) * (selectedReq.travellers?.length || 1))).toLocaleString()}</span></div>
+                  <div className="flex justify-between text-sm font-bold"><span className="text-emerald-400">Suggested Refund</span><span className="text-emerald-400">₹{Math.max(0, (selectedReq.amountPaid || 0) - ((selectedReq.cancellationPolicy?.nonRefundablePerHead || 1500) * (selectedReq.travellers?.length || 1))).toLocaleString()}</span></div>
                 </div>
 
                 {selectedReq.bookingStatus === 'Cancellation Requested' && (

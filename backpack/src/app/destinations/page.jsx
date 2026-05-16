@@ -172,9 +172,10 @@ export default function DestinationsPage() {
                           {dest.rating}
                         </span>
                       </div>
-                      <div className="absolute bottom-4 right-4">
+                      <div className="absolute bottom-4 right-4 text-right">
+                        <span className="text-cream/40 text-[10px] block">Starting From</span>
                         <span className="text-cream font-bold text-lg">
-                          ₹{dest.price.toLocaleString()}
+                          ₹{(dest.price || 0).toLocaleString("en-IN")}
                         </span>
                       </div>
                     </div>

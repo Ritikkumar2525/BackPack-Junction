@@ -10,7 +10,7 @@ export async function POST(req, { params }) {
     const updatedStory = await Story.findByIdAndUpdate(
       id,
       { $inc: { likes: 1 } },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!updatedStory) {

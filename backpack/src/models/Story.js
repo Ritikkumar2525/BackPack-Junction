@@ -25,7 +25,8 @@ const StorySchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved'],
     default: 'pending',
-  }
+  },
+  gallery: [{ type: String }],
 }, { strict: false });
 
 if (mongoose.models.Story) {

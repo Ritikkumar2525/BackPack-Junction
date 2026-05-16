@@ -14,6 +14,11 @@ const DestinationSchema = new mongoose.Schema({
   rating: { type: Number, required: true },
   price: { type: Number, required: true },
   category: [{ type: String }],
+  gallery: [{ type: String }],
 }, { timestamps: true });
 
-export default mongoose.models.Destination || mongoose.model('Destination', DestinationSchema);
+if (mongoose.models.Destination) {
+  delete mongoose.models.Destination;
+}
+
+export default mongoose.model('Destination', DestinationSchema);

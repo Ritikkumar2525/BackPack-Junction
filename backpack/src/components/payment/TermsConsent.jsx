@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Shield, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function TermsConsent({ accepted, onChange, bookingChargePerHead = 1000, travelerCount = 1 }) {
+export default function TermsConsent({ accepted, onChange, bookingChargePerHead = 1500, travelerCount = 1 }) {
   const [expanded, setExpanded] = useState(false);
   const totalCharge = bookingChargePerHead * travelerCount;
 

@@ -6,7 +6,7 @@ import Booking from "@/models/Booking";
 import Trip from "@/models/Trip";
 import { sendCancellationEmail } from "@/lib/notifications";
 
-const BOOKING_CHARGE_PER_HEAD = 1000;
+const BOOKING_CHARGE_PER_HEAD = 1500;
 
 // GET single booking
 export async function GET(request, { params }) {

@@ -6,7 +6,7 @@ import Booking from "@/models/Booking";
 import Trip from "@/models/Trip";
 import Razorpay from "razorpay";
 
-const BOOKING_CHARGE_PER_HEAD = 1000; // ₹1000 non-refundable per head
+const BOOKING_CHARGE_PER_HEAD = 1500; // ₹1500 non-refundable per head
 
 export async function GET(request) {
   try {
@@ -33,14 +33,14 @@ export async function GET(request) {
         return NextResponse.json({ stats: { totalBookings, confirmedBookings, pendingBookings, cancelledBookings, totalRevenue } });
       }
       const bookings = await Booking.find()
-        .populate('tripId', 'title destination duration price images totalSeats availableSeats itinerary inclusions exclusions pickupLocations routeLocations')
+        .populate('tripId', 'title destination duration price images totalSeats availableSeats itinerary inclusions exclusions pickupLocations routeLocations startDate endDate')
         .populate('userId', 'name email phone')
         .sort({ createdAt: -1 });
       return NextResponse.json({ bookings });
     }
 
     const bookings = await Booking.find({ userId: session.user.id })
-      .populate('tripId', 'title destination duration price images image totalSeats availableSeats itinerary inclusions exclusions pickupLocations routeLocations')
+      .populate('tripId', 'title destination duration price images image totalSeats availableSeats itinerary inclusions exclusions pickupLocations routeLocations startDate endDate')
       .sort({ createdAt: -1 });
     return NextResponse.json({ bookings });
   } catch (error) {
@@ -98,7 +98,7 @@ export async function POST(request) {
       paymentStatus: 'Pending',
       bookingStatus: 'Pending',
       paymentMode: isPayLater ? 'Pay Later' : 'Full Payment',
-      paymentMethod: paymentMethod || 'Razorpay',
+      paymentMethod: 'Razorpay',
       travellers,
       consentAccepted: true,
       cancellationPolicy: {
@@ -107,75 +107,44 @@ export async function POST(request) {
       },
     });
 
-    // Handle different payment methods
-    if (paymentMethod === 'Razorpay') {
-      if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
-        return NextResponse.json({ error: "Razorpay credentials not configured." }, { status: 500 });
-      }
-
-      const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_SECRET_KEY,
-      });
-
-      const order = await razorpay.orders.create({
-        amount: payableAmount * 100, // paise
-        currency: "INR",
-        receipt: bookingId,
-        notes: {
-          bookingId,
-          paymentMode: isPayLater ? 'booking_charge' : 'full_payment',
-          travellers: travellers.length,
-        }
-      });
-
-      booking.razorpayOrderId = order.id;
-      booking.payments = [{
-        method: 'Razorpay',
-        amount: payableAmount,
-        razorpayOrderId: order.id,
-        status: 'Pending',
-        note: isPayLater ? `Booking charge ₹${BOOKING_CHARGE_PER_HEAD}/head × ${travellers.length}` : 'Full payment',
-      }];
-
-      await booking.save();
-
-      return NextResponse.json({
-        booking: booking.toJSON(),
-        orderId: order.id,
-        razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-        payableAmount,
-      }, { status: 201 });
-
-    } else if (paymentMethod === 'Bank Transfer' || paymentMethod === 'UPI' || paymentMethod === 'QR Code') {
-      // Manual payment — booking stays pending until admin confirms
-      booking.payments = [{
-        method: paymentMethod,
-        amount: payableAmount,
-        status: 'Pending',
-        note: `${paymentMethod} — awaiting confirmation. ${isPayLater ? 'Booking charge only.' : 'Full payment.'}`,
-      }];
-
-      await booking.save();
-
-      return NextResponse.json({
-        booking: booking.toJSON(),
-        message: `Booking created. Please complete the ${paymentMethod} payment and share the transaction details. Our team will confirm within 24 hours.`,
-        payableAmount,
-        bankDetails: {
-          accountName: process.env.BANK_ACCOUNT_NAME || "Backpack Junction",
-          accountNumber: process.env.BANK_ACCOUNT_NUMBER || "XXXXXXXXXXXX",
-          ifscCode: process.env.BANK_IFSC_CODE || "XXXX0XXXXXX",
-          bankName: process.env.BANK_NAME || "XXXX Bank",
-          upiId: process.env.BANK_UPI_ID || "backpackjunction@upi",
-        },
-      }, { status: 201 });
-
-    } else {
-      // Fallback — save as pending
-      await booking.save();
-      return NextResponse.json({ booking: booking.toJSON(), message: "Booking saved. Payment pending." }, { status: 201 });
+    // Razorpay payment only
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
+      return NextResponse.json({ error: "Razorpay credentials not configured." }, { status: 500 });
     }
+
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_SECRET_KEY,
+    });
+
+    const order = await razorpay.orders.create({
+      amount: payableAmount * 100, // paise
+      currency: "INR",
+      receipt: bookingId,
+      notes: {
+        bookingId,
+        paymentMode: isPayLater ? 'booking_charge' : 'full_payment',
+        travellers: travellers.length,
+      }
+    });
+
+    booking.razorpayOrderId = order.id;
+    booking.payments = [{
+      method: 'Razorpay',
+      amount: payableAmount,
+      razorpayOrderId: order.id,
+      status: 'Pending',
+      note: isPayLater ? `Booking charge ₹${BOOKING_CHARGE_PER_HEAD}/head × ${travellers.length}` : 'Full payment',
+    }];
+
+    await booking.save();
+
+    return NextResponse.json({
+      booking: booking.toJSON(),
+      orderId: order.id,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+      payableAmount,
+    }, { status: 201 });
 
   } catch (error) {
     console.error("Booking creation error:", error);

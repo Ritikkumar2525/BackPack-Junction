@@ -5,66 +5,10 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import UpcomingTrips from "@/components/trips/UpcomingTrips";
-
-const pastTrips = [
-  {
-    title: "Valley of Flowers Trek",
-    destination: "Uttarakhand",
-    date: "Sep 2025",
-    travelers: 18,
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
-  },
-  {
-    title: "Chadar Frozen River",
-    destination: "Ladakh",
-    date: "Jan 2026",
-    travelers: 12,
-    rating: 5.0,
-    image:
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
-  },
-  {
-    title: "Banaras Spiritual Walk",
-    destination: "Banaras",
-    date: "Dec 2025",
-    travelers: 22,
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=600&q=80",
-  },
-  {
-    title: "Hampta Pass Crossing",
-    destination: "Himachal",
-    date: "Oct 2025",
-    travelers: 15,
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80",
-  },
-  {
-    title: "Tungnath Winter Trek",
-    destination: "Uttarakhand",
-    date: "Nov 2025",
-    travelers: 20,
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600&q=80",
-  },
-  {
-    title: "Kashmir Houseboat Experience",
-    destination: "Kashmir",
-    date: "Mar 2026",
-    travelers: 16,
-    rating: 5.0,
-    image:
-      "https://images.unsplash.com/photo-1597074866923-dc0589150a53?w=600&q=80",
-  },
-];
+import Image from "next/image";
 
 export default function TripsPage() {
-  const [dynamicPastTrips, setDynamicPastTrips] = useState([]);
+  const [pastTrips, setPastTrips] = useState([]);
 
   useEffect(() => {
     async function fetchPastExpeditions() {
@@ -72,7 +16,7 @@ export default function TripsPage() {
         const res = await fetch("/api/admin/past-expeditions");
         if (res.ok) {
           const data = await res.json();
-          setDynamicPastTrips(data);
+          setPastTrips(data);
         }
       } catch (err) {
         console.error("Failed to fetch past expeditions:", err);
@@ -81,7 +25,7 @@ export default function TripsPage() {
     fetchPastExpeditions();
   }, []);
 
-  const allPastTrips = [...dynamicPastTrips, ...pastTrips];
+  const allPastTrips = pastTrips;
 
   return (
     <main className="relative overflow-x-hidden">
@@ -117,23 +61,17 @@ export default function TripsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allPastTrips.map((trip, i) => (
-              <motion.div
-                key={trip._id || trip.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="glass-card overflow-hidden group"
+              <div
+                key={trip._id || trip.title || `past-${i}`}
+                className="glass-card overflow-hidden group transform-gpu"
               >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={trip.image}
-                    alt={trip.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 bg-[#0C1420]"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400";
-                    }}
+                <div className="relative h-48 overflow-hidden bg-[#0C1420]">
+                  <Image
+                    src={trip.image || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"}
+                    alt={trip.title || "Trip Image"}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="absolute inset-0 object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 via-transparent to-transparent" />
                   <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 text-[10px] text-cream/60 font-medium">
@@ -162,7 +100,7 @@ export default function TripsPage() {
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

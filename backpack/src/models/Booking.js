@@ -23,7 +23,7 @@ const PaymentRecordSchema = new mongoose.Schema({
   razorpaySignature: { type: String },
   screenshot: { type: String },
   status: { type: String, enum: ['Pending', 'Completed', 'Failed', 'Refunded'], default: 'Pending' },
-  note: { type: String }, // e.g. "Booking charge ₹1000/head" or "Manual bank transfer"
+  note: { type: String }, // e.g. "Booking charge ₹1500/head" or "Manual bank transfer"
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -36,12 +36,12 @@ const BookingSchema = new mongoose.Schema({
   // Financial
   totalAmount: { type: Number, required: true },
   amountPaid: { type: Number, default: 0 },
-  bookingCharge: { type: Number, default: 0 }, // ₹1000/head non-refundable
+  bookingCharge: { type: Number, default: 0 }, // ₹1500/head non-refundable
   refundAmount: { type: Number, default: 0 },
 
   // Status
   paymentStatus: { type: String, enum: ['Pending', 'Partial', 'Completed', 'Failed', 'Refunded'], default: 'Pending' },
-  bookingStatus: { type: String, enum: ['Pending', 'Confirmed', 'Cancellation Requested', 'Cancelled', 'Completed'], default: 'Pending' },
+  bookingStatus: { type: String, enum: ['Pending', 'Processing', 'Confirmed', 'Cancellation Requested', 'Cancelled', 'Completed'], default: 'Pending' },
   paymentMode: { type: String, enum: ['Full Payment', 'Pay Later'], default: 'Full Payment' },
 
   // Payment method used
@@ -60,7 +60,7 @@ const BookingSchema = new mongoose.Schema({
   // Consent & Policy
   consentAccepted: { type: Boolean, default: false },
   cancellationPolicy: {
-    nonRefundablePerHead: { type: Number, default: 1000 },
+    nonRefundablePerHead: { type: Number, default: 1500 },
     acknowledged: { type: Boolean, default: false },
   },
 

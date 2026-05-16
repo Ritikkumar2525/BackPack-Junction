@@ -68,9 +68,23 @@ export async function POST(req) {
       console.error("PDF Generation failed:", err);
     }
 
-    // Send email notification
+    // Extract itinerary PDF from trip if available
+    let itineraryBuffer;
     try {
-      await sendBookingEmail(booking, trip, pdfBuffer);
+      if (trip?.itineraryPdf) {
+        // itineraryPdf is stored as a base64 data URI: "data:application/pdf;base64,..."
+        const base64Data = trip.itineraryPdf.split(',')[1];
+        if (base64Data) {
+          itineraryBuffer = Buffer.from(base64Data, 'base64');
+        }
+      }
+    } catch (err) {
+      console.error("Itinerary PDF extraction failed:", err);
+    }
+
+    // Send email notification with both PDFs
+    try {
+      await sendBookingEmail(booking, trip, pdfBuffer, itineraryBuffer);
     } catch (err) {
       console.error("Email sending failed:", err);
     }

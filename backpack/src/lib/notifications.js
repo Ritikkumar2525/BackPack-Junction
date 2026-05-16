@@ -29,7 +29,7 @@ const travelQuotes = [
 
 const getRandomQuote = () => travelQuotes[Math.floor(Math.random() * travelQuotes.length)];
 
-export async function sendBookingEmail(booking, trip, invoicePdfBuffer) {
+export async function sendBookingEmail(booking, trip, invoicePdfBuffer, itineraryPdfBuffer) {
   try {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
       console.log("SMTP credentials missing. Skipping email.");
@@ -124,6 +124,15 @@ export async function sendBookingEmail(booking, trip, invoicePdfBuffer) {
                 <td style="padding:10px 0;color:rgba(245,240,232,0.4);font-size:12px;">Payment Method</td>
                 <td style="padding:10px 0;color:#F5F0E8;font-size:12px;text-align:right;">${booking.paymentMethod || 'N/A'}</td>
               </tr>
+              ${booking.razorpayPaymentId ? `
+              <tr>
+                <td style="padding:10px 0;color:rgba(245,240,232,0.4);font-size:12px;border-top:1px solid rgba(245,240,232,0.04);">Transaction ID</td>
+                <td style="padding:10px 0;color:#F5F0E8;font-size:11px;text-align:right;font-family:monospace;border-top:1px solid rgba(245,240,232,0.04);">${booking.razorpayPaymentId}</td>
+              </tr>` : ''}
+              <tr>
+                <td style="padding:10px 0;color:rgba(245,240,232,0.4);font-size:12px;border-top:1px solid rgba(245,240,232,0.04);">Payment Status</td>
+                <td style="padding:10px 0;font-size:12px;text-align:right;font-weight:600;border-top:1px solid rgba(245,240,232,0.04);color:${booking.paymentStatus === 'Completed' ? '#10B981' : '#F59E0B'};">${booking.paymentStatus === 'Partial' ? 'Partially Paid' : booking.paymentStatus}</td>
+              </tr>
             </table>
           </div>
 
@@ -142,6 +151,7 @@ export async function sendBookingEmail(booking, trip, invoicePdfBuffer) {
               We're honoured to be part of your journey to the majestic Himalayas. 
               Our team is working to make this trip an unforgettable experience for you. 
               ${isConfirmed ? 'Your invoice is attached with this email.' : 'We will notify you once your booking is confirmed.'}
+              ${itineraryPdfBuffer ? ' Trip itinerary PDF is also attached for your reference.' : ''}
             </p>
           </div>
 
@@ -167,7 +177,7 @@ export async function sendBookingEmail(booking, trip, invoicePdfBuffer) {
           <!-- Cancellation Policy -->
           <div style="margin:0 32px 24px;padding:16px 20px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.1);border-radius:12px;">
             <p style="margin:0;font-size:11px;color:rgba(245,240,232,0.5);line-height:1.7;">
-              <strong style="color:#EF4444;">Cancellation Policy:</strong> ₹1,000 per head is a non-refundable booking charge. 
+              <strong style="color:#EF4444;">Cancellation Policy:</strong> ₹1,500 per head is a non-refundable booking charge. 
               Remaining amount will be refunded within 7-10 working days upon cancellation.
             </p>
           </div>
@@ -189,12 +199,12 @@ export async function sendBookingEmail(booking, trip, invoicePdfBuffer) {
           </div>
         </div>
       `,
-      attachments: invoicePdfBuffer ? [
-        {
-          filename: `Invoice_${booking.bookingId}.pdf`,
-          content: invoicePdfBuffer,
-        }
-      ] : []
+      attachments: (() => {
+        const att = [];
+        if (invoicePdfBuffer) att.push({ filename: `Invoice_${booking.bookingId}.pdf`, content: invoicePdfBuffer });
+        if (itineraryPdfBuffer) att.push({ filename: `Itinerary_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`, content: itineraryPdfBuffer });
+        return att;
+      })()
     };
 
     await transporter.sendMail(mailOptions);
@@ -245,7 +255,7 @@ export async function sendCancellationEmail(booking, trip) {
               </tr>
               <tr style="border-top:1px solid rgba(245,240,232,0.05);">
                 <td style="padding:8px 0;color:rgba(245,240,232,0.4);font-size:12px;">Refund Amount</td>
-                <td style="padding:8px 0;color:#10B981;font-size:14px;text-align:right;font-weight:600;">₹${(booking.refundAmount || Math.max(0, (booking.amountPaid || 0) - ((booking.cancellationPolicy?.nonRefundablePerHead || 1000) * (booking.travellers?.length || 1)))).toLocaleString('en-IN')}</td>
+                <td style="padding:8px 0;color:#10B981;font-size:14px;text-align:right;font-weight:600;">₹${(booking.refundAmount || Math.max(0, (booking.amountPaid || 0) - ((booking.cancellationPolicy?.nonRefundablePerHead || 1500) * (booking.travellers?.length || 1)))).toLocaleString('en-IN')}</td>
               </tr>
               <tr style="border-top:1px solid rgba(245,240,232,0.05);">
                 <td style="padding:8px 0;color:rgba(245,240,232,0.4);font-size:12px;">Refund Status</td>

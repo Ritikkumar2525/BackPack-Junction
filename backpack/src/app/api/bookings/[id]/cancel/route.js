@@ -41,10 +41,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Associated trip not found" }, { status: 404 });
     }
 
-    // Prevent cancellation after trip start date (assuming departureDate exists on trip, or fallback to checking if it's already started)
-    // If travelDates.startDate is populated in booking
-    const startDate = booking.travelDates?.startDate || trip.departureDate;
-    if (startDate && new Date(startDate) < new Date()) {
+    // Prevent cancellation after trip start date
+    const tripStartDate = booking.travelDates?.startDate || trip.startDate;
+    if (tripStartDate && new Date(tripStartDate) < new Date()) {
       return NextResponse.json({ error: "Cannot cancel a trip after its start date" }, { status: 400 });
     }
 

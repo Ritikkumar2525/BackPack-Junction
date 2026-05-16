@@ -1,198 +1,413 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Trash2, Edit, X, MapPin, Star, DollarSign, Save, Loader2, ArrowLeft, Thermometer, Mountain, Calendar, Clock, Upload, ImagePlus } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function DestinationsAdmin() {
   const [destinations, setDestinations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
-  const [formData, setFormData] = useState({
-    id: "",
-    name: "",
-    tagline: "",
-    description: "",
-    image: "",
-    bestSeason: "",
-    difficulty: "",
-    altitude: "",
-    duration: "",
-    temperature: "",
-    rating: "",
-    price: "",
-    category: "", // will split by comma
+  const getInitialForm = () => ({
+    id: "", name: "", tagline: "", description: "", image: "",
+    bestSeason: "", difficulty: "", altitude: "", duration: "",
+    temperature: "", rating: "", price: "", category: "", gallery: [],
   });
+  const [formData, setFormData] = useState(getInitialForm());
 
   const fetchDestinations = async () => {
     try {
       const res = await fetch("/api/destinations");
+      if (res.ok) setDestinations(await res.json());
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchDestinations(); }, []);
+
+  const handleEdit = (dest) => {
+    setFormData({
+      id: dest.id || "",
+      name: dest.name || "",
+      tagline: dest.tagline || "",
+      description: dest.description || "",
+      image: dest.image || "",
+      bestSeason: dest.bestSeason || "",
+      difficulty: dest.difficulty || "",
+      altitude: dest.altitude || "",
+      duration: dest.duration || "",
+      temperature: dest.temperature || "",
+      rating: dest.rating || "",
+      price: dest.price || "",
+      category: Array.isArray(dest.category) ? dest.category.join(", ") : (dest.category || ""),
+      gallery: dest.gallery || [],
+    });
+    setEditingId(dest.id || dest._id);
+    setShowForm(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File is too large! Maximum size is 10MB.");
+      return;
+    }
+
+    setImageUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (res.ok) {
-        setDestinations(await res.json());
+        const data = await res.json();
+        setFormData(prev => ({ ...prev, image: data.url }));
+        toast.success("Image uploaded successfully!");
+      } else {
+        toast.error("Failed to upload image.");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Upload failed.");
     } finally {
-      setLoading(false);
+      setImageUploading(false);
     }
   };
 
-  useEffect(() => {
-    fetchDestinations();
-  }, []);
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setImageUploading(true);
+    let uploadedUrls = [];
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`File ${file.name} is too large! Maximum size is 10MB.`);
+        continue;
+      }
+      
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: uploadData });
+        if (res.ok) {
+          const data = await res.json();
+          uploadedUrls.push(data.url);
+        } else {
+          toast.error(`Failed to upload ${file.name}.`);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error(`Upload failed for ${file.name}.`);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...uploadedUrls] }));
+      toast.success(`${uploadedUrls.length} images uploaded to gallery!`);
+    }
+    
+    setImageUploading(false);
+  };
+
+  const removeGalleryImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== indexToRemove)
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/destinations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          rating: parseFloat(formData.rating),
-          price: parseInt(formData.price, 10),
-          category: formData.category.split(",").map(c => c.trim()),
-        }),
-      });
-      if (res.ok) {
-        setIsModalOpen(false);
-        setFormData({ id: "", name: "", tagline: "", description: "", image: "", bestSeason: "", difficulty: "", altitude: "", duration: "", temperature: "", rating: "", price: "", category: "" });
-        fetchDestinations();
+      const payload = {
+        ...formData,
+        rating: parseFloat(formData.rating),
+        price: parseInt(formData.price, 10),
+        category: formData.category.split(",").map(c => c.trim()).filter(Boolean),
+      };
+
+      let url, method;
+      if (editingId) {
+        url = `/api/destinations/${editingId}`;
+        method = "PUT";
       } else {
-        alert("Failed to add destination.");
+        url = "/api/destinations";
+        method = "POST";
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setShowForm(false);
+        setEditingId(null);
+        setFormData(getInitialForm());
+        fetchDestinations();
+        toast.success(editingId ? "Destination updated!" : "Destination added!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to save destination.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error adding destination.");
-    } finally {
-      setSubmitting(false);
+      toast.error("Error saving destination.");
     }
+    setSubmitting(false);
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this destination? Hardcoded destinations cannot be deleted from here.")) return;
+    if (!confirm("Delete this destination?")) return;
     try {
       const res = await fetch(`/api/destinations/${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchDestinations();
-      } else {
-        alert("Failed to delete. It might be a hardcoded destination.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error deleting.");
-    }
+        toast.success("Destination deleted.");
+      } else toast.error("Failed to delete.");
+    } catch (err) { console.error(err); }
   };
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-burnt-orange/30 border-t-burnt-orange rounded-full animate-spin" /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-cream">Destinations</h1>
-          <p className="text-sm text-cream/50 mt-1">Manage dynamic destinations.</p>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-burnt-orange hover:bg-burnt-orange/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          <Plus size={16} /> Add Destination
-        </button>
-      </div>
+      <AnimatePresence mode="wait">
+        {!showForm ? (
+          <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-cream">Destinations</h1>
+                <p className="text-cream/35 text-sm mt-1">{destinations.length} destinations · Click to edit</p>
+              </div>
+              <button onClick={() => { setEditingId(null); setFormData(getInitialForm()); setShowForm(true); }}
+                className="btn-primary text-sm py-2.5 px-5"><span className="relative z-10 flex items-center gap-2"><Plus size={14} /> Add Destination</span></button>
+            </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-burnt-orange" size={40} />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {destinations.map((dest) => (
-            <div key={dest.id} className="bg-[#1a2332] border border-cream/10 rounded-xl overflow-hidden">
-              <img src={dest.image} alt={dest.name} className="w-full h-40 object-cover" />
-              <div className="p-4">
-                <h3 className="font-bold text-cream mb-1">{dest.name}</h3>
-                <p className="text-sm text-cream/50 mb-3">{dest.tagline}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-teal">₹{dest.price} | {dest.duration}</span>
-                  <button onClick={() => handleDelete(dest.id)} className="text-red-400 hover:text-red-300">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {destinations.map((dest, i) => (
+                <motion.div key={dest.id || dest._id || i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                  onClick={() => handleEdit(dest)}
+                  className="glass-card overflow-hidden cursor-pointer group hover:border-burnt-orange/20 transition-all">
+                  <div className="relative h-40">
+                    <img src={dest.image} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f18] via-transparent to-transparent" />
+                    <div className="absolute top-3 left-3 flex items-center gap-1 bg-midnight/60 backdrop-blur-sm text-amber-400 text-xs px-2 py-1 rounded-lg">
+                      <Star size={10} className="fill-amber-400" /> {dest.rating}
+                    </div>
+                    {dest.difficulty && (
+                      <div className="absolute top-3 right-3 bg-midnight/60 backdrop-blur-sm text-cream/60 text-[10px] px-2 py-1 rounded-lg">{dest.difficulty}</div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-cream font-semibold">{dest.name}</h3>
+                    <p className="text-cream/30 text-xs mt-0.5">{dest.tagline}</p>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-cream/5">
+                      <span className="text-burnt-orange font-bold text-sm">Starting ₹{(dest.price || 0).toLocaleString("en-IN")}</span>
+                      <span className="text-cream/25 text-xs">{dest.duration}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+            <div className="flex items-center gap-4 border-b border-cream/5 pb-4">
+              <button onClick={() => { setShowForm(false); setEditingId(null); }} className="p-2 glass rounded-full text-cream/50 hover:text-cream">
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <h1 className="font-[family-name:var(--font-heading)] text-xl font-bold text-cream">
+                  {editingId ? `Edit: ${formData.name}` : "Add New Destination"}
+                </h1>
+                <p className="text-cream/35 text-xs mt-1">Configure destination details, pricing, and media</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto pt-20 pb-20">
-          <div className="bg-[#1a2332] rounded-2xl w-full max-w-2xl border border-cream/10 p-6 shadow-2xl mt-32">
-            <h2 className="text-xl font-bold text-cream mb-4">Add Destination</h2>
-            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">ID / Slug</label>
-                <input required type="text" value={formData.id} onChange={(e) => setFormData({ ...formData, id: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="e.g., munnar" />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Info */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2"><MapPin size={16} className="text-burnt-orange"/> Basic Information</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">ID / Slug</label>
+                    <input required value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})}
+                      disabled={!!editingId}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent disabled:opacity-40" placeholder="e.g. kashmir" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Name</label>
+                    <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="Kashmir" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-cream/40 text-xs mb-1 block">Tagline</label>
+                  <input required value={formData.tagline} onChange={e => setFormData({...formData, tagline: e.target.value})}
+                    className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="Paradise on Earth" />
+                </div>
+                <div>
+                  <label className="text-cream/40 text-xs mb-1 block">Description</label>
+                  <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
+                    rows={3} className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent resize-none" placeholder="Experience the beauty..." />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Name</label>
-                <input required type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="Munnar" />
+
+              {/* Details & Pricing */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2"><DollarSign size={16} className="text-emerald-400"/> Details & Pricing</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Starting Price (₹)</label>
+                    <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="12999" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Duration</label>
+                    <input required value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="5-7 Days" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Rating</label>
+                    <input required type="number" step="0.1" min="1" max="5" value={formData.rating} onChange={e => setFormData({...formData, rating: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="4.8" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Best Season</label>
+                    <input required value={formData.bestSeason} onChange={e => setFormData({...formData, bestSeason: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="Apr - Oct" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Difficulty</label>
+                    <select value={formData.difficulty} onChange={e => setFormData({...formData, difficulty: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent bg-transparent">
+                      <option value="">Select</option>
+                      <option value="Easy">Easy</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Difficult">Difficult</option>
+                      <option value="Extreme">Extreme</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Altitude</label>
+                    <input required value={formData.altitude} onChange={e => setFormData({...formData, altitude: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="1,585m" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Temperature</label>
+                    <input required value={formData.temperature} onChange={e => setFormData({...formData, temperature: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="-2°C to 25°C" />
+                  </div>
+                  <div>
+                    <label className="text-cream/40 text-xs mb-1 block">Categories (comma separated)</label>
+                    <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
+                      className="glass rounded-xl px-4 py-2.5 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="Scenic, Trekking, Nature" />
+                  </div>
+                </div>
               </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-cream/60 mb-1">Tagline</label>
-                <input required type="text" value={formData.tagline} onChange={(e) => setFormData({ ...formData, tagline: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="Kashmir of South India" />
+
+              {/* Image */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2"><Mountain size={16} className="text-blue-400"/> Cover Image</h3>
+                
+                {formData.image ? (
+                  <div className="relative h-64 rounded-xl overflow-hidden border border-cream/10 group">
+                    <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f18]/60 to-transparent" />
+                    <div className="absolute bottom-3 left-4">
+                      <p className="text-cream font-bold">{formData.name || "Destination"}</p>
+                      <p className="text-cream/50 text-xs">{formData.tagline}</p>
+                    </div>
+                    
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <label className="cursor-pointer bg-black/50 hover:bg-burnt-orange text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2">
+                        {imageUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                        {imageUploading ? "Uploading..." : "Change Image"}
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={imageUploading} />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-burnt-orange/30 transition-colors bg-white/5">
+                    {imageUploading ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 size={28} className="text-burnt-orange animate-spin mb-2" />
+                        <p className="text-cream/60 text-sm">Uploading to Cloudinary...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <ImagePlus size={32} className="text-cream/20 mb-3" />
+                        <p className="text-cream/40 text-sm">Click to upload image</p>
+                        <p className="text-cream/20 text-xs mt-1">Recommended: 1920x1080 (Max 10MB)</p>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={imageUploading} />
+                  </label>
+                )}
               </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-cream/60 mb-1">Description</label>
-                <textarea required value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange h-20" placeholder="Beautiful tea gardens..." />
+
+              {/* Gallery Images */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2">
+                  <ImagePlus size={16} className="text-purple-400"/> Gallery Images
+                </h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.gallery && formData.gallery.map((img, idx) => (
+                    <div key={idx} className="relative h-32 rounded-xl overflow-hidden border border-cream/10 group">
+                      <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button type="button" onClick={() => removeGalleryImage(idx)} className="p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-burnt-orange/30 transition-colors bg-white/5 relative">
+                    {imageUploading ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 size={24} className="text-burnt-orange animate-spin mb-2" />
+                        <span className="text-cream/40 text-xs">Uploading...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center text-center p-4">
+                        <ImagePlus size={24} className="text-cream/40 mb-2" />
+                        <span className="text-cream/40 text-xs">Add Images</span>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryUpload} disabled={imageUploading} />
+                  </label>
+                </div>
               </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-cream/60 mb-1">Image URL</label>
-                <input required type="url" value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="https://..." />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Best Season</label>
-                <input required type="text" value={formData.bestSeason} onChange={(e) => setFormData({ ...formData, bestSeason: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="Sep - March" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Difficulty</label>
-                <input required type="text" value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="Easy" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Altitude</label>
-                <input required type="text" value={formData.altitude} onChange={(e) => setFormData({ ...formData, altitude: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="1,600m" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Duration</label>
-                <input required type="text" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="3-5 Days" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Temperature</label>
-                <input required type="text" value={formData.temperature} onChange={(e) => setFormData({ ...formData, temperature: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="10°C - 25°C" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Rating</label>
-                <input required type="number" step="0.1" value={formData.rating} onChange={(e) => setFormData({ ...formData, rating: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="4.8" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Price (₹)</label>
-                <input required type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="12999" />
-              </div>
-              <div>
-                <label className="block text-xs text-cream/60 mb-1">Categories (comma separated)</label>
-                <input required type="text" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full bg-[#0a0f18] border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm outline-none focus:border-burnt-orange" placeholder="Scenic, Nature" />
-              </div>
-              
-              <div className="col-span-2 flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-cream/5 hover:bg-cream/10 text-cream py-2 rounded-lg text-sm font-medium transition-colors">Cancel</button>
-                <button type="submit" disabled={submitting} className="flex-1 bg-burnt-orange hover:bg-burnt-orange/90 text-white py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
-                  {submitting ? "Adding..." : "Add Destination"}
+
+              {/* Submit */}
+              <div className="flex items-center justify-end gap-4">
+                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="text-cream/40 hover:text-cream text-sm">Cancel</button>
+                <button type="submit" disabled={submitting} className="btn-primary text-sm py-3 px-10">
+                  <span className="relative z-10 flex items-center gap-2">
+                    {submitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                    {submitting ? "Saving..." : editingId ? "Update Destination" : "Add Destination"}
+                  </span>
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

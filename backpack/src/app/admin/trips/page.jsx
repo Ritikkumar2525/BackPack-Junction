@@ -1,22 +1,26 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Calendar, Users, Edit, Trash2, Plus, Mountain, DollarSign, ArrowLeft, Image as ImageIcon, Video, List, CheckCircle2, XCircle, Info, FileText, Route } from "lucide-react";
+import { MapPin, Calendar, Users, Edit, Trash2, Plus, Mountain, DollarSign, ArrowLeft, Image as ImageIcon, Video, List, CheckCircle2, XCircle, Info, FileText, Route, Upload, Eye, X as XIcon, ImagePlus, Loader2 as Loader2Icon } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminTripsPage() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState(getInitialFormState());
 
   function getInitialFormState() {
     return {
-      title: "", destination: "", duration: "", price: "", totalSeats: 20, departureDate: "",
-      images: [""], videos: [""], 
+      title: "", destination: "", duration: "", price: "", totalSeats: 20,
+      startDate: "", endDate: "",
+      images: [""], videos: [""], gallery: [],
       itinerary: [{ day: 1, title: "", activities: [""] }],
+      itineraryPdf: "",
       inclusions: [""], exclusions: [""],
       pickupLocations: [""], dropLocations: [""],
       hotelDetails: "", policies: "",
@@ -33,6 +37,94 @@ export default function AdminTripsPage() {
   const fetchTrips = () => {
     setLoading(true);
     fetch("/api/trips").then(r => r.json()).then(d => { setTrips(d.trips || []); setLoading(false); });
+  };
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setImageUploading(true);
+    let successCount = 0;
+    const newImages = [];
+
+    try {
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`File ${file.name} exceeds 10MB limit.`);
+          continue;
+        }
+
+        const uploadData = new FormData();
+        uploadData.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: uploadData });
+        
+        if (res.ok) {
+          const data = await res.json();
+          newImages.push(data.url);
+          successCount++;
+        }
+      }
+
+      if (newImages.length > 0) {
+        const currentImages = formData.images.filter(img => img !== "");
+        setFormData(prev => ({ ...prev, images: [...currentImages, ...newImages] }));
+        toast.success(`Successfully uploaded ${successCount} image(s)!`);
+      } else {
+        toast.error("Failed to upload images.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred during upload.");
+    } finally {
+      setImageUploading(false);
+      e.target.value = null;
+    }
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setImageUploading(true);
+    let uploadedUrls = [];
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`File ${file.name} is too large! Maximum size is 10MB.`);
+        continue;
+      }
+      
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: uploadData });
+        if (res.ok) {
+          const data = await res.json();
+          uploadedUrls.push(data.url);
+        } else {
+          toast.error(`Failed to upload ${file.name}.`);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error(`Upload failed for ${file.name}.`);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...uploadedUrls] }));
+      toast.success(`${uploadedUrls.length} images uploaded to gallery!`);
+    }
+    
+    setImageUploading(false);
+    e.target.value = null;
+  };
+
+  const removeGalleryImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== indexToRemove)
+    }));
   };
 
   const handleArrayChange = (field, index, value) => {
@@ -67,10 +159,13 @@ export default function AdminTripsPage() {
       duration: trip.duration || "",
       price: trip.price || "",
       totalSeats: trip.totalSeats || 20,
-      departureDate: trip.departureDate ? new Date(trip.departureDate).toISOString().split('T')[0] : "",
+      startDate: trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : "",
+      endDate: trip.endDate ? new Date(trip.endDate).toISOString().split('T')[0] : "",
       images: trip.images?.length ? trip.images : [""],
       videos: trip.videos?.length ? trip.videos : [""],
+      gallery: trip.gallery || [],
       itinerary: trip.itinerary?.length ? trip.itinerary : [{ day: 1, title: "", activities: [""] }],
+      itineraryPdf: trip.itineraryPdf || "",
       inclusions: trip.inclusions?.length ? trip.inclusions : [""],
       exclusions: trip.exclusions?.length ? trip.exclusions : [""],
       pickupLocations: trip.pickupLocations?.length ? trip.pickupLocations : [""],
@@ -82,6 +177,16 @@ export default function AdminTripsPage() {
       isPublished: trip.isPublished ?? true
     });
     setShowForm(true);
+  };
+
+  const handlePdfUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') { alert('Please upload a PDF file.'); return; }
+    if (file.size > 10 * 1024 * 1024) { alert('PDF must be under 10MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => setFormData(prev => ({ ...prev, itineraryPdf: reader.result }));
+    reader.readAsDataURL(file);
   };
 
   const handleDelete = async (id, e) => {
@@ -115,15 +220,36 @@ export default function AdminTripsPage() {
       cleanData.faqs = cleanData.faqs.filter(f => f.question && f.answer);
       cleanData.routeLocations = (cleanData.routeLocations || []).filter(r => r.name && r.lat && r.lng);
 
+      // Convert date strings to proper ISO dates or null to allow clearing
+      if (cleanData.startDate) {
+        cleanData.startDate = new Date(cleanData.startDate).toISOString();
+      } else {
+        cleanData.startDate = null;
+      }
+      if (cleanData.endDate) {
+        cleanData.endDate = new Date(cleanData.endDate).toISOString();
+      } else {
+        cleanData.endDate = null;
+      }
+
+      // Only set availableSeats on new trip creation, not on edit
+      const payload = { ...cleanData };
+      if (!payload._id) {
+        payload.availableSeats = payload.totalSeats;
+      }
+
       const res = await fetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...cleanData, availableSeats: cleanData.totalSeats })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         setShowForm(false);
         setFormData(getInitialFormState());
         fetchTrips();
+      } else {
+        const errData = await res.json();
+        alert(errData.error || 'Failed to save trip');
       }
     } catch (err) {
       console.error(err);
@@ -162,8 +288,17 @@ export default function AdminTripsPage() {
                       <span className={`text-[10px] px-2.5 py-1 rounded-full ${t.isPublished ? "bg-emerald-500/10 text-emerald-400" : "bg-cream/5 text-cream/30"}`}>{t.isPublished ? "Published" : "Draft"}</span>
                     </div>
                     <div className="flex flex-wrap gap-4 mt-3 text-xs text-cream/30">
-                      <span className="flex items-center gap-1"><Users size={12} /> {t.totalSeats - t.availableSeats}/{t.totalSeats} booked</span>
+                      <span className="flex items-center gap-1"><Users size={12} /> {t.bookedSeats || (t.totalSeats - t.availableSeats)}/{t.totalSeats} booked</span>
                       <span className="flex items-center gap-1 text-burnt-orange"><DollarSign size={12} /> ₹{t.price?.toLocaleString("en-IN")}</span>
+                      {t.startDate && (
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(t.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                      )}
+                      {t.endDate && (
+                        <span className="flex items-center gap-1">— {new Date(t.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                      )}
+                      {t.itineraryPdf && (
+                        <span className="flex items-center gap-1 text-blue-400"><FileText size={12} /> PDF</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2 md:flex-col">
@@ -196,8 +331,34 @@ export default function AdminTripsPage() {
                     <div><label className="text-cream/40 text-xs mb-1 block">Price (₹)</label><input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="glass rounded-xl px-4 py-2 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="Amount" /></div>
                     <div><label className="text-cream/40 text-xs mb-1 block">Total Seats</label><input required type="number" value={formData.totalSeats} onChange={e => setFormData({...formData, totalSeats: e.target.value})} className="glass rounded-xl px-4 py-2 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" placeholder="Seats" /></div>
                   </div>
-                  <div><label className="text-cream/40 text-xs mb-1 block">Departure Date</label><input type="date" value={formData.departureDate} onChange={e => setFormData({...formData, departureDate: e.target.value})} className="glass rounded-xl px-4 py-2 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-cream/40 text-xs mb-1 block">Trip Start Date</label><input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="glass rounded-xl px-4 py-2 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" /></div>
+                    <div><label className="text-cream/40 text-xs mb-1 block">Trip End Date</label><input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="glass rounded-xl px-4 py-2 text-sm w-full outline-none focus:border-burnt-orange/50 text-cream border border-transparent" /></div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Itinerary PDF Upload */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2"><Upload size={16} className="text-blue-400"/> Trip Itinerary PDF</h3>
+                {formData.itineraryPdf ? (
+                  <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
+                    <FileText size={20} className="text-emerald-400" />
+                    <div className="flex-1">
+                      <p className="text-cream text-sm font-medium">Itinerary PDF Attached</p>
+                      <p className="text-cream/30 text-[10px]">Click Preview to view, or Replace to upload a new one</p>
+                    </div>
+                    <button type="button" onClick={() => { const w = window.open(); w.document.write(`<iframe src="${formData.itineraryPdf}" style="width:100%;height:100%;border:none;"></iframe>`); }} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 border border-blue-500/20 px-3 py-1.5 rounded-lg"><Eye size={12}/> Preview</button>
+                    <button type="button" onClick={() => setFormData({...formData, itineraryPdf: ""})} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-500/20 px-3 py-1.5 rounded-lg"><XIcon size={12}/> Remove</button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center gap-3 p-8 border-2 border-dashed border-cream/10 rounded-xl cursor-pointer hover:border-burnt-orange/30 transition-colors">
+                    <Upload size={28} className="text-cream/20" />
+                    <p className="text-cream/40 text-sm">Click to upload Itinerary PDF</p>
+                    <p className="text-cream/20 text-[10px]">Max 10MB · PDF format only</p>
+                    <input type="file" accept=".pdf" onChange={handlePdfUpload} className="hidden" />
+                  </label>
+                )}
               </div>
 
               {/* Day-wise Itinerary */}
@@ -274,6 +435,41 @@ export default function AdminTripsPage() {
                 </div>
               </div>
 
+              {/* Gallery Images */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2">
+                  <ImagePlus size={16} className="text-purple-400"/> Gallery Images
+                </h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.gallery && formData.gallery.map((img, idx) => (
+                    <div key={idx} className="relative h-32 rounded-xl overflow-hidden border border-cream/10 group">
+                      <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button type="button" onClick={() => removeGalleryImage(idx)} className="p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-burnt-orange/30 transition-colors bg-white/5 relative">
+                    {imageUploading ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2Icon size={24} className="text-burnt-orange animate-spin mb-2" />
+                        <span className="text-cream/40 text-xs">Uploading...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center text-center p-4">
+                        <ImagePlus size={24} className="text-cream/40 mb-2" />
+                        <span className="text-cream/40 text-xs">Add Images</span>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryUpload} disabled={imageUploading} />
+                  </label>
+                </div>
+              </div>
+
               {/* Route Locations */}
               <div className="glass-card p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-cream/5 pb-2 mb-4 flex-wrap gap-2">
@@ -319,13 +515,32 @@ export default function AdminTripsPage() {
 
               {/* Media Uploads */}
               <div className="glass-card p-6 space-y-4">
-                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2"><ImageIcon size={16} className="text-pink-400"/> Media (URLs)</h3>
-                <div>
-                  <label className="text-cream/40 text-xs mb-2 block">Image URLs</label>
-                  {formData.images.map((img, i) => (
-                    <input key={i} value={img} onChange={e => handleArrayChange("images", i, e.target.value)} className="glass rounded-xl px-3 py-2 text-sm w-full outline-none text-cream mb-2" placeholder="https://..." />
+                <h3 className="text-cream font-semibold border-b border-cream/5 pb-2 mb-4 flex items-center gap-2"><ImageIcon size={16} className="text-pink-400"/> Trip Images</h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  {formData.images.filter(img => img.trim() !== "").map((img, i) => (
+                    <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-white/10 group">
+                      <img src={img} alt="Trip image" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeArrayItem("images", formData.images.indexOf(img))} className="absolute top-2 right-2 bg-black/60 hover:bg-red-500 text-white p-1.5 rounded-full transition-colors opacity-0 group-hover:opacity-100">
+                        <XIcon size={14} />
+                      </button>
+                    </div>
                   ))}
-                  <button type="button" onClick={() => addArrayItem("images")} className="text-[10px] text-burnt-orange">+ Add Image</button>
+                  
+                  <label className="relative aspect-video rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-burnt-orange/50 transition-colors bg-white/5">
+                    {imageUploading ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2Icon size={24} className="text-burnt-orange animate-spin mb-2" />
+                        <span className="text-cream/50 text-[10px]">Uploading...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <ImagePlus size={24} className="text-cream/30 mb-2" />
+                        <span className="text-cream/50 text-[10px]">Upload Images</span>
+                      </>
+                    )}
+                    <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" disabled={imageUploading} />
+                  </label>
                 </div>
               </div>
 

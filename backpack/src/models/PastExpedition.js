@@ -7,6 +7,12 @@ const PastExpeditionSchema = new mongoose.Schema({
   travelers: { type: Number, required: true },
   rating: { type: Number, required: true },
   image: { type: String, required: true },
+  tripId: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip' }, // links to original trip if auto-migrated
+  gallery: [{ type: String }],
 }, { timestamps: true });
 
-export default mongoose.models.PastExpedition || mongoose.model('PastExpedition', PastExpeditionSchema);
+if (mongoose.models.PastExpedition) {
+  delete mongoose.models.PastExpedition;
+}
+
+export default mongoose.model('PastExpedition', PastExpeditionSchema);

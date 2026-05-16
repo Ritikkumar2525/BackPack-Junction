@@ -63,10 +63,18 @@ export default function SplashScreen({ onComplete }) {
             }}
           />
 
+          {/* CSS Animation for stars to save JS thread */}
+          <style>{`
+            @keyframes splash-star-twinkle {
+              0%, 100% { transform: scale(1); opacity: var(--star-min-opacity); }
+              50% { transform: scale(1.3); opacity: var(--star-max-opacity); }
+            }
+          `}</style>
+          
           {/* Twinkling Stars Background */}
           <div className="absolute inset-0 pointer-events-none z-0">
             {STARS.map((s) => (
-              <motion.div
+              <div
                 key={s.id}
                 className="absolute rounded-full bg-white"
                 style={{
@@ -74,16 +82,9 @@ export default function SplashScreen({ onComplete }) {
                   top: `${s.top}%`,
                   width: `${s.size}px`,
                   height: `${s.size}px`,
-                }}
-                animate={{
-                  opacity: [s.opacity * 0.2, s.opacity, s.opacity * 0.2],
-                  scale: [1, 1.3, 1],
-                }}
-                transition={{
-                  duration: s.dur,
-                  delay: s.delay,
-                  repeat: Infinity,
-                  ease: "easeInOut",
+                  "--star-min-opacity": s.opacity * 0.2,
+                  "--star-max-opacity": s.opacity,
+                  animation: `splash-star-twinkle ${s.dur}s ease-in-out ${s.delay}s infinite`,
                 }}
               />
             ))}

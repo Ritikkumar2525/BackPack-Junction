@@ -10,9 +10,8 @@ import HeroSection from "@/components/hero/HeroSection";
 const TrendingDestinations = dynamic(() => import("@/components/destinations/TrendingDestinations"), { ssr: true });
 const StatsSection = dynamic(() => import("@/components/stats/StatsSection"), { ssr: true });
 const UpcomingTrips = dynamic(() => import("@/components/trips/UpcomingTrips"), { ssr: true });
-const AiTripPlanner = dynamic(() => import("@/components/ai-planner/AiTripPlanner"), { ssr: true });
+const PolaroidGrid = dynamic(() => import("@/components/gallery/PolaroidGrid"), { ssr: true });
 const InteractiveMap = dynamic(() => import("@/components/map/InteractiveMap"), { ssr: false }); // Map relies on window
-const TravelStories = dynamic(() => import("@/components/stories/TravelStories"), { ssr: true });
 const TestimonialsSection = dynamic(() => import("@/components/testimonials/TestimonialsSection"), { ssr: true });
 const NewsletterSection = dynamic(() => import("@/components/newsletter/NewsletterSection"), { ssr: true });
 const Footer = dynamic(() => import("@/components/footer/Footer"), { ssr: true });
@@ -33,9 +32,8 @@ export default function Home() {
         <TrendingDestinations />
         <StatsSection />
         <UpcomingTrips />
-        <AiTripPlanner />
+        <PolaroidGrid />
         <InteractiveMap />
-        <TravelStories />
         <TestimonialsSection />
         <NewsletterSection />
         <Footer />

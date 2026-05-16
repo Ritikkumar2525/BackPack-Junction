@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { AlertCircle, Mountain } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const { data: session, status } = useSession();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -19,10 +21,10 @@ export default function LoginPage() {
       if (session?.user?.email === "junctionbackpack@gmail.com" || session?.user?.role === "admin") {
         router.push("/admin");
       } else {
-        router.push("/dashboard");
+        router.push(callbackUrl || "/dashboard");
       }
     }
-  }, [status, session, router]);
+  }, [status, session, router, callbackUrl]);
 
   if (status === "loading" || status === "authenticated") {
     return null;
@@ -52,7 +54,7 @@ export default function LoginPage() {
         if (sess?.user?.email === "junctionbackpack@gmail.com" || sess?.user?.role === "admin") {
           window.location.href = "/admin";
         } else {
-          window.location.href = "/dashboard";
+          window.location.href = callbackUrl || "/dashboard";
         }
       }
     } catch (err) {
@@ -63,7 +65,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: callbackUrl || "/dashboard" });
   };
 
   return (
@@ -105,7 +107,7 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10 text-cream/40 font-medium text-xs">
-            Not a member yet? <Link href="/signup" className="text-burnt-orange hover:text-white transition-colors ml-1 font-bold">Register now</Link>
+            Not a member yet? <Link href={`/signup${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-burnt-orange hover:text-white transition-colors ml-1 font-bold">Register now</Link>
           </div>
         </div>
 
@@ -199,11 +201,19 @@ export default function LoginPage() {
             </div>
             
             <div className="lg:hidden mt-6 mb-2 text-center text-cream/40 font-medium text-xs">
-              Not a member yet? <Link href="/signup" className="text-burnt-orange underline underline-offset-4 decoration-2 font-bold hover:text-white">Register now</Link>
+              Not a member yet? <Link href={`/signup${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-burnt-orange underline underline-offset-4 decoration-2 font-bold hover:text-white">Register now</Link>
             </div>
           </div>
         </div>
       </motion.div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0a0f18]"><div className="w-10 h-10 border-2 border-burnt-orange/30 border-t-burnt-orange rounded-full animate-spin" /></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

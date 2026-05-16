@@ -440,7 +440,7 @@ export default function BookingDetailPage({ params }) {
           }
         }}
         method={booking.paymentMethod === 'Razorpay' ? 'Bank Transfer' : (booking.paymentMethod || 'Bank Transfer')}
-        amount={booking.paymentMode === 'Pay Later' ? (booking.bookingCharge || 1000 * travellers.length) : booking.totalAmount}
+        amount={booking.paymentMode === 'Pay Later' ? (booking.bookingCharge || 1500 * travellers.length) : booking.totalAmount}
         totalAmount={booking.totalAmount}
         paymentMode={booking.paymentMode}
         bookingId={booking._id || booking.bookingId}

@@ -154,7 +154,7 @@ export async function generateInvoicePDF(booking, trip) {
 
       if (booking.paymentStatus === 'Pending') {
         startY += 25;
-        const requiredAdvance = booking.bookingCharge || (1000 * pax);
+        const requiredAdvance = booking.bookingCharge || (1500 * pax);
         doc.fillColor('#EF4444').font('Helvetica-Bold').fontSize(9).text(`* Required Advance to Confirm: INR ${requiredAdvance.toLocaleString('en-IN')}`, 340, startY, { align: 'right', width: 200 });
       }
 
@@ -209,7 +209,7 @@ export async function generateInvoicePDF(booking, trip) {
       startY += 75;
       doc.font('Helvetica-Bold').fontSize(9).text('TERMS & CONDITIONS:', 40, startY);
       doc.font('Helvetica').fontSize(8).fillColor('#4A5568');
-      doc.text('1. INR 1,000 per head booking charge is non-refundable under any circumstances.', 40, startY + 15);
+      doc.text('1. INR 1,500 per head booking charge is non-refundable under any circumstances.', 40, startY + 15);
       doc.text('2. Cancellation within 7-15 days: 50% refund. Within 7 days: No refund.', 40, startY + 27);
       doc.text('3. Please quote the invoice number when making the payment.', 40, startY + 39);
       
