@@ -152,14 +152,7 @@ export default function Navbar() {
                           <LayoutDashboard size={14} />
                           Dashboard
                         </Link>
-                        <Link
-                          href="/profile"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-cream/60 hover:text-cream hover:bg-cream/5 rounded-xl transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <User size={14} />
-                          My Profile
-                        </Link>
+
                         <button
                           onClick={handleSignOut}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-colors"

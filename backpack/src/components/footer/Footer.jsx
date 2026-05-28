@@ -69,7 +69,7 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer className="relative bg-[#0a101a] overflow-hidden pt-24 pb-10 border-t border-white/5">
+    <footer id="tour-step-contact" className="relative bg-[#0a101a] overflow-hidden pt-24 pb-10 border-t border-white/5">
       
       {/* Cinematic Background Glows (Optimized with radial gradients) */}
       <div 

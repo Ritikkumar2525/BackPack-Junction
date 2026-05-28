@@ -131,7 +131,7 @@ export default function TrendingDestinations() {
         style={{ background: "radial-gradient(circle, rgba(30,45,74,0.15) 0%, transparent 70%)" }}
       />
 
-      <div ref={ref} className="max-w-7xl mx-auto px-6 lg:px-8">
+      <div id="tour-step-destinations" ref={ref} className="max-w-7xl mx-auto px-6 lg:px-8 relative rounded-3xl py-10">
         {/* Header */}
         <div className="text-center mb-20 max-w-2xl mx-auto">
           <motion.span

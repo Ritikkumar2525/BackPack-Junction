@@ -162,7 +162,7 @@ export default function HeroSection() {
   return (
     <>
       {/* HERO — Full viewport, minimal content */}
-      <section className="relative w-full h-screen min-h-[700px] overflow-hidden flex items-center justify-center">
+      <section id="tour-step-hero" className="relative w-full h-screen min-h-[700px] overflow-hidden flex items-center justify-center">
         {/* Cinematic Background Slider */}
         <div className="absolute inset-0 z-0 bg-black">
           <AnimatePresence>

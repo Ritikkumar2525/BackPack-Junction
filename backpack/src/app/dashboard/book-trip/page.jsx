@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { MapPin, Calendar, Users, CreditCard, ArrowRight, Check, Clock, ChevronDown, HeartPulse, Shield, AlertTriangle, MessageCircle, Phone, Mail, X, Mountain } from "lucide-react";
+import { MapPin, Calendar, Users, CreditCard, ArrowRight, Check, Clock, ChevronDown, HeartPulse, Shield, AlertTriangle, MessageCircle, Phone, Mail, X, Mountain, Info } from "lucide-react";
 import Script from "next/script";
 import TermsConsent from "@/components/payment/TermsConsent";
 
@@ -268,70 +268,107 @@ function BookTripForm() {
 
         {/* STEP 2 - Traveller Details */}
         {step === 2 && selected && (
-          <motion.div key="s2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-4 pb-4 border-b border-cream/5">
-                <img src={selected.image || selected.images?.[0] || "/destinations/delhi.jpg"} alt="" className="w-16 h-16 rounded-xl object-cover" />
-                <div><h3 className="text-cream font-semibold">{selected.title}</h3><p className="text-cream/30 text-xs">{selected.duration} · {selected.destination}</p></div>
-              </div>
-              <div className="mt-4">
-                <label className="text-cream/40 text-xs uppercase tracking-wider mb-2 block">Number of Travelers</label>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => handleTravelerCountChange(Math.max(1, travelerCount - 1))} className="w-10 h-10 rounded-xl glass text-cream/50 hover:text-cream border border-cream/10 flex items-center justify-center text-lg">−</button>
-                  <span className="text-cream text-xl font-bold w-8 text-center">{travelerCount}</span>
-                  <button onClick={() => handleTravelerCountChange(travelerCount + 1)} className="w-10 h-10 rounded-xl glass text-cream/50 hover:text-cream border border-cream/10 flex items-center justify-center text-lg">+</button>
+          <motion.div key="s2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
+            <div className="bg-[#0a1017]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 md:p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-burnt-orange/5 rounded-full blur-[100px] pointer-events-none" />
+              <div className="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-white/5 relative z-10">
+                <img src={selected.image || selected.images?.[0] || "/destinations/delhi.jpg"} alt="" className="w-24 h-24 rounded-2xl object-cover shadow-lg border border-white/5" />
+                <div className="flex-1">
+                  <h3 className="text-2xl font-[family-name:var(--font-heading)] font-bold text-cream mb-1">{selected.title}</h3>
+                  <div className="flex items-center gap-4 text-cream/50 text-sm">
+                    <span className="flex items-center gap-1"><Clock size={14} className="text-burnt-orange" /> {selected.duration}</span>
+                    <span className="flex items-center gap-1"><MapPin size={14} className="text-burnt-orange" /> {selected.destination}</span>
+                  </div>
+                </div>
+                <div className="md:border-l md:border-white/5 md:pl-6">
+                  <label className="text-cream/40 text-[11px] uppercase tracking-widest font-semibold mb-3 block">Travelers</label>
+                  <div className="flex items-center gap-4 bg-black/30 p-2 rounded-2xl border border-white/5">
+                    <button onClick={() => handleTravelerCountChange(Math.max(1, travelerCount - 1))} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-burnt-orange/20 text-cream/70 hover:text-burnt-orange transition-colors flex items-center justify-center text-lg">−</button>
+                    <span className="text-cream text-xl font-bold w-6 text-center">{travelerCount}</span>
+                    <button onClick={() => handleTravelerCountChange(travelerCount + 1)} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-burnt-orange/20 text-cream/70 hover:text-burnt-orange transition-colors flex items-center justify-center text-lg">+</button>
+                  </div>
                 </div>
               </div>
             </div>
-            {travellersData.map((t, i) => (
-              <div key={i} className="glass-card p-6 border border-cream/10 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-burnt-orange/50" />
-                <h3 className="text-cream font-semibold flex items-center gap-2 mb-5">
-                  <div className="w-6 h-6 rounded-full bg-burnt-orange/20 text-burnt-orange flex items-center justify-center text-xs font-bold">{i + 1}</div>
-                  Traveller {i + 1}
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Full Name *</label>
-                    <input value={t.fullName} onChange={(e) => updateTraveler(i, "fullName", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full" placeholder="Full Name" /></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Age *</label>
-                      <input type="number" value={t.age} onChange={(e) => updateTraveler(i, "age", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full" placeholder="25" /></div>
-                    <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Gender *</label>
-                      <select value={t.gender} onChange={(e) => updateTraveler(i, "gender", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full appearance-none">
-                        <option value="Male" className="bg-midnight text-cream">Male</option><option value="Female" className="bg-midnight text-cream">Female</option><option value="Other" className="bg-midnight text-cream">Other</option>
-                      </select></div>
+
+            <div className="space-y-6">
+              {travellersData.map((t, i) => (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={i} className="bg-[#0a1017]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 md:p-8 relative overflow-hidden group hover:border-burnt-orange/20 transition-colors duration-500">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-burnt-orange to-amber-500 opacity-80" />
+                  <h3 className="text-lg font-[family-name:var(--font-heading)] font-bold text-cream flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-burnt-orange/10 border border-burnt-orange/20 text-burnt-orange flex items-center justify-center text-sm shadow-[inset_0_0_10px_rgba(198,122,60,0.2)]">{i + 1}</div>
+                    Traveller {i + 1}
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">FULL NAME *</label>
+                      <input value={t.fullName} onChange={(e) => updateTraveler(i, "fullName", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none placeholder-cream/20" placeholder="e.g. Rahul Sharma" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">AGE *</label>
+                        <input type="number" value={t.age} onChange={(e) => updateTraveler(i, "age", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none placeholder-cream/20" placeholder="25" />
+                      </div>
+                      <div>
+                        <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">GENDER *</label>
+                        <select value={t.gender} onChange={(e) => updateTraveler(i, "gender", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none appearance-none">
+                          <option value="Male" className="bg-[#0a1017] text-cream">Male</option>
+                          <option value="Female" className="bg-[#0a1017] text-cream">Female</option>
+                          <option value="Other" className="bg-[#0a1017] text-cream">Other</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Contact *</label>
-                    <input type="tel" value={t.contactNumber} onChange={(e) => updateTraveler(i, "contactNumber", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full" placeholder="+91" /></div>
-                  <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Email</label>
-                    <input type="email" value={t.emailAddress} onChange={(e) => updateTraveler(i, "emailAddress", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full" placeholder="email@example.com" /></div>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">City</label>
-                    <input value={t.city} onChange={(e) => updateTraveler(i, "city", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full" placeholder="Delhi, Mumbai..." /></div>
-                  <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block flex items-center gap-1"><HeartPulse size={10} /> Emergency Contact *</label>
-                    <input value={t.emergencyContact} onChange={(e) => updateTraveler(i, "emergencyContact", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-red-500/30 w-full" placeholder="Name & Phone" /></div>
-                </div>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Food Pref</label>
-                    <select value={t.foodPreference} onChange={(e) => updateTraveler(i, "foodPreference", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full appearance-none">
-                      <option value="Veg" className="bg-midnight">Veg</option><option value="Non-Veg" className="bg-midnight">Non-Veg</option>
-                    </select></div>
-                  <div className="col-span-2"><label className="text-cream/40 text-[10px] uppercase tracking-wider mb-1 block">Medical Notes</label>
-                    <input value={t.medicalConditions} onChange={(e) => updateTraveler(i, "medicalConditions", e.target.value)} className="glass rounded-xl px-4 py-2.5 text-cream/90 placeholder-cream/20 text-sm outline-none border border-transparent focus:border-burnt-orange/30 w-full" placeholder="Asthma, etc." /></div>
-                </div>
-              </div>
-            ))}
-            <div className="flex gap-3 pt-4">
-              <button onClick={() => setStep(1)} className="glass px-6 py-3 rounded-full text-sm text-cream/50 hover:text-cream border border-cream/10">Back</button>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">CONTACT NUMBER *</label>
+                      <input type="tel" value={t.contactNumber} onChange={(e) => updateTraveler(i, "contactNumber", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none placeholder-cream/20" placeholder="+91" />
+                    </div>
+                    <div>
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">EMAIL ADDRESS</label>
+                      <input type="email" value={t.emailAddress} onChange={(e) => updateTraveler(i, "emailAddress", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none placeholder-cream/20" placeholder="email@example.com" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">CITY OF RESIDENCE</label>
+                      <input value={t.city} onChange={(e) => updateTraveler(i, "city", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none placeholder-cream/20" placeholder="Delhi, Mumbai..." />
+                    </div>
+                    <div>
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 flex items-center gap-1.5"><HeartPulse size={12} className="text-red-400" /> EMERGENCY CONTACT *</label>
+                      <input value={t.emergencyContact} onChange={(e) => updateTraveler(i, "emergencyContact", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all outline-none placeholder-cream/20" placeholder="Name & Phone" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">FOOD PREFERENCE</label>
+                      <select value={t.foodPreference} onChange={(e) => updateTraveler(i, "foodPreference", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none appearance-none">
+                        <option value="Veg" className="bg-[#0a1017]">Veg</option>
+                        <option value="Non-Veg" className="bg-[#0a1017]">Non-Veg</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-cream/60 text-xs font-semibold tracking-wider mb-2 block">MEDICAL NOTES / SPECIAL REQUESTS</label>
+                      <input value={t.medicalConditions} onChange={(e) => updateTraveler(i, "medicalConditions", e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-cream text-sm focus:bg-black/40 focus:border-burnt-orange/50 focus:ring-1 focus:ring-burnt-orange/50 transition-all outline-none placeholder-cream/20" placeholder="Any allergies, asthma, or specific needs?" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <button onClick={() => setStep(1)} className="bg-[#0a1017] hover:bg-white/5 border border-white/10 px-8 py-4 rounded-xl text-sm text-cream transition-colors font-semibold tracking-wide">Back</button>
               <button onClick={() => {
                 const valid = travellersData.every(t => t.fullName && t.age && t.gender && t.contactNumber && t.emergencyContact);
                 if (!valid) { alert("Please fill all required (*) fields."); return; }
                 setStep(3);
-              }} className="btn-primary text-sm py-3 px-8 flex-1">
-                <span className="relative z-10 flex items-center justify-center gap-2">Continue to Payment <ArrowRight size={14} /></span>
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }} className="flex-1 bg-burnt-orange hover:bg-[#d98542] text-white py-4 rounded-xl font-semibold tracking-wide shadow-[0_0_20px_rgba(198,122,60,0.3)] hover:shadow-[0_0_30px_rgba(198,122,60,0.5)] transition-all flex items-center justify-center gap-2">
+                Continue to Payment <ArrowRight size={16} />
               </button>
             </div>
           </motion.div>
@@ -339,63 +376,99 @@ function BookTripForm() {
 
         {/* STEP 3 - Payment */}
         {step === 3 && selected && (
-          <motion.div key="s3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
+          <motion.div key="s3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8 max-w-3xl mx-auto">
             {/* Summary */}
-            <div className="glass-card p-6 space-y-4">
-              <h2 className="text-cream font-semibold">Payment Summary</h2>
-              <div className="space-y-3 pb-4 border-b border-cream/5 text-sm">
-                <div className="flex justify-between"><span className="text-cream/40">{selected.title}</span><span className="text-cream">₹{(selected.price || 0).toLocaleString("en-IN")}</span></div>
-                <div className="flex justify-between"><span className="text-cream/40">Travelers</span><span className="text-cream">×{travelerCount}</span></div>
-                <div className="flex justify-between text-base font-bold"><span className="text-cream">Total</span><span className="text-burnt-orange">₹{totalAmount.toLocaleString("en-IN")}</span></div>
+            <div className="bg-[#0a1017]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 md:p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-burnt-orange to-amber-500" />
+              <h2 className="text-xl font-[family-name:var(--font-heading)] font-bold text-cream mb-6">Payment Summary</h2>
+              
+              <div className="bg-black/20 border border-white/5 rounded-2xl p-5 space-y-4 mb-8">
+                <div className="flex justify-between items-center"><span className="text-cream/60 font-medium">{selected.title}</span><span className="text-cream font-medium">₹{(selected.price || 0).toLocaleString("en-IN")}</span></div>
+                <div className="flex justify-between items-center"><span className="text-cream/60 font-medium">Travelers</span><span className="text-cream font-medium">×{travelerCount}</span></div>
+                <div className="h-px w-full bg-white/5 my-2" />
+                <div className="flex justify-between items-center text-lg"><span className="text-cream font-bold">Total Amount</span><span className="text-burnt-orange font-bold drop-shadow-[0_0_8px_rgba(198,122,60,0.3)]">₹{totalAmount.toLocaleString("en-IN")}</span></div>
               </div>
 
               {/* Payment Mode */}
-              <div>
-                <label className="text-cream/40 text-xs uppercase tracking-wider mb-3 block">Payment Mode</label>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="mb-8">
+                <label className="text-cream/60 text-xs font-semibold tracking-widest uppercase mb-4 block">Select Payment Mode</label>
+                <div className="grid sm:grid-cols-2 gap-4">
                   {["Full Payment", "Pay Later"].map(m => (
                     <button key={m} onClick={() => setPaymentMode(m)}
-                      className={`p-3 rounded-xl text-sm text-center transition-all ${paymentMode === m ? "bg-burnt-orange/15 text-burnt-orange border border-burnt-orange/30" : "glass text-cream/40 border border-cream/5 hover:border-cream/10"}`}>
-                      {m}
-                      {m === "Pay Later" && <span className="block text-[10px] text-cream/30 mt-0.5">₹{BOOKING_CHARGE.toLocaleString("en-IN")}/head</span>}
+                      className={`relative p-5 rounded-2xl text-left transition-all duration-300 border group ${paymentMode === m ? "bg-burnt-orange/10 border-burnt-orange/50 shadow-[0_0_20px_rgba(198,122,60,0.15)]" : "bg-black/20 border-white/10 hover:border-white/20 hover:bg-black/40"}`}>
+                      {paymentMode === m && <div className="absolute top-4 right-4 text-burnt-orange"><Check size={18} /></div>}
+                      <h4 className={`font-semibold mb-1 flex items-center gap-2 ${paymentMode === m ? "text-burnt-orange" : "text-cream"}`}>
+                        {m}
+                        {m === "Pay Later" && (
+                          <div className="relative flex items-center justify-center">
+                            <Info size={14} className="text-cream/40 group-hover:text-burnt-orange transition-colors" />
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[260px] p-4 bg-[#0a1017]/95 backdrop-blur-xl border border-burnt-orange/30 rounded-2xl shadow-[0_15px_40px_rgba(198,122,60,0.2)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 transform translate-y-2 group-hover:translate-y-0 text-center pointer-events-none before:content-[''] before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-8 before:border-transparent before:border-t-burnt-orange/30">
+                              <p className="text-[12px] text-cream leading-relaxed mb-2 font-medium">
+                                Reserve your Himalayan adventure with just ₹1,500 now ✨
+                              </p>
+                              <p className="text-[11px] text-cream/60 leading-relaxed font-light">
+                                Pay the remaining amount comfortably at the time of departure and secure your spot before seats fill up.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </h4>
+                      <p className="text-cream/40 text-xs">
+                        {m === "Full Payment" ? "Pay the entire amount now and relax." : `Secure your spot with just ₹${BOOKING_CHARGE.toLocaleString("en-IN")}/head`}
+                      </p>
                     </button>
                   ))}
                 </div>
-                {paymentMode === "Pay Later" && (
-                  <div className="mt-3 p-3 bg-amber-500/5 border border-amber-500/15 rounded-xl flex items-start gap-2">
-                    <AlertTriangle size={14} className="text-amber-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-cream/50 text-[11px]">Booking charge of <span className="text-amber-400 font-semibold">₹{(BOOKING_CHARGE * travelerCount).toLocaleString("en-IN")}</span> (₹{BOOKING_CHARGE}/head × {travelerCount}) is non-refundable. Balance ₹{(totalAmount - BOOKING_CHARGE * travelerCount).toLocaleString("en-IN")} due before departure.</p>
-                  </div>
-                )}
+                
+                {/* Pay Later Warning */}
+                <AnimatePresence>
+                  {paymentMode === "Pay Later" && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-4">
+                      <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-3">
+                        <AlertTriangle size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-cream/70 text-sm leading-relaxed">Booking charge of <span className="text-amber-400 font-semibold">₹{(BOOKING_CHARGE * travelerCount).toLocaleString("en-IN")}</span> is non-refundable. The balance of <span className="text-amber-400 font-semibold">₹{(totalAmount - BOOKING_CHARGE * travelerCount).toLocaleString("en-IN")}</span> must be paid before departure.</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Payment Method — Razorpay Only */}
-              <div className="p-3 bg-burnt-orange/10 border border-burnt-orange/20 rounded-xl flex items-center gap-3">
-                <CreditCard size={18} className="text-burnt-orange" />
+              <div className="p-5 bg-gradient-to-r from-[#0C1420] to-[#1E2D4A] border border-white/10 rounded-2xl flex items-center gap-4 mb-8 relative overflow-hidden group">
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                  <CreditCard size={20} className="text-burnt-orange" />
+                </div>
                 <div>
-                  <p className="text-cream text-sm font-medium">Razorpay Secure Payment</p>
-                  <p className="text-cream/40 text-[10px]">Cards, UPI, Net Banking, Wallets</p>
+                  <p className="text-cream font-semibold">Razorpay Secure Checkout</p>
+                  <p className="text-cream/50 text-xs mt-0.5">Cards, UPI, Net Banking, Wallets supported</p>
                 </div>
               </div>
 
               {/* Payable */}
-              <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl flex items-center justify-between">
-                <span className="text-cream/70 text-sm font-medium">Amount to Pay Now</span>
-                <span className="text-emerald-400 text-xl font-bold">₹{payableAmount.toLocaleString("en-IN")}</span>
+              <div className="p-6 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <span className="text-emerald-400/80 text-sm font-semibold tracking-wide uppercase">Amount to Pay Now</span>
+                  <p className="text-cream/50 text-xs mt-1">Includes all taxes and fees</p>
+                </div>
+                <span className="text-emerald-400 text-3xl font-bold tracking-tight">₹{payableAmount.toLocaleString("en-IN")}</span>
               </div>
             </div>
 
             {/* Terms */}
-            <TermsConsent accepted={consentAccepted} onChange={setConsentAccepted} bookingChargePerHead={BOOKING_CHARGE} travelerCount={travelerCount} />
+            <div className="bg-[#0a1017]/50 backdrop-blur-md border border-white/5 p-6 rounded-3xl">
+              <TermsConsent accepted={consentAccepted} onChange={setConsentAccepted} bookingChargePerHead={BOOKING_CHARGE} travelerCount={travelerCount} />
+            </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setStep(2)} className="glass px-6 py-3 rounded-full text-sm text-cream/50 hover:text-cream border border-cream/10">Back</button>
-              <button onClick={handleBook} disabled={booking || !consentAccepted} className="btn-primary text-sm py-3 px-8 flex-1 disabled:opacity-40 disabled:cursor-not-allowed">
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  <CreditCard size={14} />
-                  {booking ? "Processing..." : `Pay ₹${payableAmount.toLocaleString("en-IN")}`}
-                </span>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <button onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#0a1017] hover:bg-white/5 border border-white/10 px-8 py-4 rounded-xl text-sm text-cream transition-colors font-semibold tracking-wide">Back</button>
+              <button onClick={handleBook} disabled={booking || !consentAccepted} className="flex-1 bg-burnt-orange hover:bg-[#d98542] text-white py-4 rounded-xl font-semibold tracking-wide shadow-[0_0_20px_rgba(198,122,60,0.3)] hover:shadow-[0_0_30px_rgba(198,122,60,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                {booking ? (
+                  <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing Securely...</span>
+                ) : (
+                  <span className="flex items-center gap-2"><Shield size={16} /> Pay ₹{payableAmount.toLocaleString("en-IN")} Securely</span>
+                )}
               </button>
             </div>
           </motion.div>

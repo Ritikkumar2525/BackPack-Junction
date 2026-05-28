@@ -13,8 +13,6 @@ const contactCards = [
     label: "Our Location",
     value: "New Delhi, India",
     detail: "Available for meetings by appointment",
-    color: "from-rose-500/20 to-rose-600/5",
-    iconColor: "text-rose-400",
     action: "https://maps.google.com/?q=New+Delhi,India",
     actionLabel: "View on Maps",
   },
@@ -23,8 +21,6 @@ const contactCards = [
     label: "Email Us",
     value: "junctionbackpack@gmail.com",
     detail: "We reply within 24 hours",
-    color: "from-teal/20 to-teal/5",
-    iconColor: "text-teal",
     action: "mailto:junctionbackpack@gmail.com",
     actionLabel: "Send Email",
   },
@@ -33,8 +29,6 @@ const contactCards = [
     label: "Call Us",
     value: "+91 85950 54501",
     detail: "Mon–Sat, 9AM–8PM IST",
-    color: "from-burnt-orange/20 to-burnt-orange/5",
-    iconColor: "text-burnt-orange",
     action: "tel:+918595054501",
     actionLabel: "Call Now",
   },
@@ -43,8 +37,6 @@ const contactCards = [
     label: "WhatsApp",
     value: "+91 82870 54501",
     detail: "Quick responses, trip queries",
-    color: "from-green-500/20 to-green-600/5",
-    iconColor: "text-green-400",
     action: "https://wa.me/918287054501",
     actionLabel: "Chat Now",
   },
@@ -130,7 +122,7 @@ export default function ContactPage() {
       {/* Contact Cards */}
       <section className="pb-16">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {contactCards.map((card, i) => {
               const Icon = card.icon;
               return (
@@ -141,19 +133,23 @@ export default function ContactPage() {
                   key={card.label}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  whileHover={{ y: -6, scale: 1.02 }}
-                  className={`relative group bg-gradient-to-br ${card.color} border border-white/10 hover:border-white/20 rounded-2xl p-6 text-center block cursor-pointer transition-all duration-300 overflow-hidden backdrop-blur-sm`}
+                  transition={{ delay: i * 0.1, duration: 0.6, ease: "easeOut" }}
+                  whileHover={{ y: -8 }}
+                  className="relative group bg-[#0a1017]/80 backdrop-blur-md border border-white/5 hover:border-burnt-orange/30 rounded-2xl p-8 text-center flex flex-col h-full cursor-pointer transition-all duration-500 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(198,122,60,0.15)]"
                 >
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/3 transition-colors duration-300 rounded-2xl" />
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10 mb-4 group-hover:scale-110 transition-transform duration-300 ${card.iconColor}`}>
-                    <Icon size={22} />
+                  {/* Subtle top gradient glow on hover */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-burnt-orange/20 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                  
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/5 border border-white/10 mx-auto mb-6 group-hover:scale-110 group-hover:bg-burnt-orange/10 group-hover:border-burnt-orange/30 transition-all duration-500 text-cream/70 group-hover:text-burnt-orange relative z-10 shadow-lg">
+                    <Icon size={24} strokeWidth={1.5} />
                   </div>
-                  <p className="text-[11px] uppercase tracking-[3px] font-bold text-cream/40 mb-2">{card.label}</p>
-                  <p className="text-cream font-semibold text-sm leading-snug mb-2">{card.value}</p>
-                  <p className="text-cream/40 text-xs mb-4">{card.detail}</p>
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${card.iconColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
-                    {card.actionLabel} <ExternalLink size={11} />
+                  
+                  <p className="text-[10px] uppercase tracking-[4px] font-bold text-cream/40 mb-3 relative z-10">{card.label}</p>
+                  <p className="text-cream font-medium text-base mb-2 relative z-10">{card.value}</p>
+                  <p className="text-cream/40 text-sm mb-6 flex-grow relative z-10 leading-relaxed">{card.detail}</p>
+                  
+                  <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold text-burnt-orange opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 relative z-10">
+                    {card.actionLabel} <ExternalLink size={14} />
                   </span>
                 </motion.a>
               );

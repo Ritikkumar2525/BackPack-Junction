@@ -43,7 +43,7 @@ export default function PolaroidGrid() {
   ];
 
   return (
-    <section className="py-24 bg-transparent relative overflow-hidden">
+    <section id="tour-step-blogs" className="py-24 bg-transparent relative overflow-hidden rounded-3xl">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-burnt-orange/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#0C1420]/50 rounded-full blur-[120px] pointer-events-none z-[-1]" />

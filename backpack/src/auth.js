@@ -30,7 +30,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         await connectDB();
-        const user = await User.findOne({ email: credentials.email });
+        const email = credentials.email.trim().toLowerCase();
+        const user = await User.findOne({ email });
         if (!user) {
           throw new InvalidCredentials("No account found with this email");
         }

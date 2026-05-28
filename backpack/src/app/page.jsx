@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import SplashScreen from "@/components/SplashScreen";
 import Navbar from "@/components/navbar/Navbar";
 import HeroSection from "@/components/hero/HeroSection";
+import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
 // Dynamically import below-the-fold components for ultra-fast initial load
 const TrendingDestinations = dynamic(() => import("@/components/destinations/TrendingDestinations"), { ssr: true });
@@ -37,6 +38,7 @@ export default function Home() {
         <TestimonialsSection />
         <NewsletterSection />
         <Footer />
+        <OnboardingTour />
       </main>
     </>
   );

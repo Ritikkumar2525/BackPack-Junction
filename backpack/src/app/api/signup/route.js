@@ -1,59 +1,58 @@
-import { NextResponse } from "next/server";
-import { createUser, getUser } from "@/lib/users";
+import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import connectDB from '@/lib/mongodb';
+import User from '@/models/User';
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const body = await request.json();
-    const { name, email, password, phone } = body;
+    await connectDB();
 
-    // Validate required fields
-    if (!name || !email || !password) {
+    const { name, email, phone, password } = await req.json();
+
+    if (!name || !email || !phone || !password) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: 'Please provide all required fields' },
         { status: 400 }
       );
     }
-
-    // Check email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      );
-    }
-
-    // Check password length
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      );
-    }
+    
+    const normalizedEmail = email.trim().toLowerCase();
 
     // Check if user exists
-    const existing = getUser(email);
-    if (existing) {
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
       return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 }
+        { error: 'An account with this email already exists' },
+        { status: 400 }
       );
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create user
-    const result = createUser({ name, email, password, phone });
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 409 });
-    }
+    const role = normalizedEmail === 'junctionbackpack@gmail.com' ? 'admin' : 'user';
+
+    const user = await User.create({
+      name,
+      email: normalizedEmail,
+      phone,
+      password: hashedPassword,
+      role
+    });
 
     return NextResponse.json(
-      { message: "Account created successfully", user: result.user },
+      { 
+        message: 'Account created successfully',
+        user: { id: user._id, name: user.name, email: user.email }
+      },
       { status: 201 }
     );
   } catch (error) {
     console.error("Signup error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'An error occurred during registration. Please try again.' },
       { status: 500 }
     );
   }
