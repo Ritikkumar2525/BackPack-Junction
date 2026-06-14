@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import SplashScreen from "@/components/SplashScreen";
 import Navbar from "@/components/navbar/Navbar";
@@ -13,15 +13,27 @@ const StatsSection = dynamic(() => import("@/components/stats/StatsSection"), { 
 const UpcomingTrips = dynamic(() => import("@/components/trips/UpcomingTrips"), { ssr: true });
 const PolaroidGrid = dynamic(() => import("@/components/gallery/PolaroidGrid"), { ssr: true });
 const InteractiveMap = dynamic(() => import("@/components/map/InteractiveMap"), { ssr: false }); // Map relies on window
-const TestimonialsSection = dynamic(() => import("@/components/testimonials/TestimonialsSection"), { ssr: true });
+const GoogleReviewsSection = dynamic(() => import("@/components/google-reviews/GoogleReviewsSection"), { ssr: true });
 const NewsletterSection = dynamic(() => import("@/components/newsletter/NewsletterSection"), { ssr: true });
 const Footer = dynamic(() => import("@/components/footer/Footer"), { ssr: true });
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasSeen = sessionStorage.getItem("hasSeenSplash");
+      if (hasSeen) {
+        setShowSplash(false);
+      }
+    }
+  }, []);
+
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("hasSeenSplash", "true");
+    }
   }, []);
 
   return (
@@ -35,7 +47,7 @@ export default function Home() {
         <UpcomingTrips />
         <PolaroidGrid />
         <InteractiveMap />
-        <TestimonialsSection />
+        <GoogleReviewsSection />
         <NewsletterSection />
         <Footer />
         <OnboardingTour />

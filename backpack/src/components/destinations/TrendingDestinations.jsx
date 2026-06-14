@@ -15,6 +15,9 @@ const difficultyColors = {
   default: "bg-cream/10 text-cream/90 border-cream/20"
 };
 
+// Cache destinations in memory to prevent re-fetching on back navigation
+let cachedDestinations = null;
+
 function DestinationCard({ dest, index }) {
   return (
     <motion.div
@@ -98,15 +101,17 @@ function DestinationCard({ dest, index }) {
 export default function TrendingDestinations() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [allDestinations, setAllDestinations] = useState(destinations);
+  const [allDestinations, setAllDestinations] = useState(cachedDestinations || destinations);
 
   useEffect(() => {
+    if (cachedDestinations) return; // Already cached, skip re-fetch
     async function fetchDestinations() {
       try {
         const res = await fetch("/api/destinations");
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
+            cachedDestinations = data;
             setAllDestinations(data);
           } else {
             console.error("Destinations API did not return an array:", data);

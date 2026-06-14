@@ -162,7 +162,7 @@ export default function HeroSection() {
   return (
     <>
       {/* HERO — Full viewport, minimal content */}
-      <section id="tour-step-hero" className="relative w-full h-screen min-h-[700px] overflow-hidden flex items-center justify-center">
+      <section className="relative w-full h-screen min-h-[700px] overflow-hidden flex items-center justify-center">
         {/* Cinematic Background Slider */}
         <div className="absolute inset-0 z-0 bg-black">
           <AnimatePresence>
@@ -197,7 +197,7 @@ export default function HeroSection() {
         </div>
 
         {/* Content — centered, spacious */}
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        <div id="tour-step-hero" className="relative z-10 max-w-4xl mx-auto px-6 text-center py-10 rounded-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

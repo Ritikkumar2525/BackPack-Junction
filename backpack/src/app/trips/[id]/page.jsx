@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import TripGallery from "@/components/trips/TripGallery";
@@ -29,6 +30,7 @@ function Section({ icon: Icon, title, children, iconColor = "text-burnt-orange" 
 
 export default function TripDetailsPage({ params }) {
   const { id } = use(params);
+  const router = useRouter();
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState(0);
@@ -89,9 +91,9 @@ export default function TripDetailsPage({ params }) {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full relative z-10">
-          <Link href="/trips" className="inline-flex items-center gap-2 text-cream/50 hover:text-burnt-orange transition-colors mb-5 text-sm font-medium">
-            <ArrowLeft size={16} /> Back to Expeditions
-          </Link>
+          <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-cream/50 hover:text-burnt-orange transition-colors mb-5 text-sm font-medium">
+            <ArrowLeft size={16} /> Back
+          </button>
 
           <div className="flex flex-wrap gap-2 mb-4">
             {trip.difficulty && (

@@ -88,13 +88,8 @@ export async function PATCH(request, { params }) {
       booking.cancellationReason = body.reason || 'User requested cancellation';
       booking.refundAmount = refundAmount;
 
-      // Restore seats (only if they were reserved)
+      // Restore seats (Dynamic calculation relies on seatsReserved flag)
       if (booking.seatsReserved && booking.tripId) {
-        const trip = await Trip.findById(booking.tripId._id || booking.tripId);
-        if (trip) {
-          trip.availableSeats = Math.min(trip.totalSeats, trip.availableSeats + booking.travellers.length);
-          await trip.save();
-        }
         booking.seatsReserved = false;
       }
 

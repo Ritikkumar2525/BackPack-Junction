@@ -69,7 +69,7 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer id="tour-step-contact" className="relative bg-[#0a101a] overflow-hidden pt-24 pb-10 border-t border-white/5">
+    <footer className="relative bg-[#0a101a] overflow-hidden pt-24 pb-10 border-t border-white/5">
       
       {/* Cinematic Background Glows (Optimized with radial gradients) */}
       <div 
@@ -81,7 +81,7 @@ export default function Footer() {
         style={{ background: "radial-gradient(ellipse, rgba(26,46,77,0.4) 0%, transparent 70%)" }}
       />
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+      <div id="tour-step-contact" className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 py-10 rounded-3xl">
         
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8 mb-20">

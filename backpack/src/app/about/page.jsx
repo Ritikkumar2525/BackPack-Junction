@@ -4,30 +4,38 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 
+const InstagramIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
+
 const team = [
   {
-    name: "Arjun Nair",
-    role: "Founder & Lead Explorer",
-    image: "https://randomuser.me/api/portraits/men/75.jpg",
-    bio: "Ex-software engineer turned mountain lover. Summited 15+ Himalayan peaks.",
+    name: "Piyush Raj",
+    image: "/team/piyush.png",
+    bio: "The one who always says 'bhai ek trip plan karte hain' — and actually makes it happen.",
+    instagram: "https://www.instagram.com/piyushraj825",
   },
   {
-    name: "Riya Sharma",
-    role: "Head of Experiences",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
-    bio: "Curates every itinerary with obsessive attention to authentic local experiences.",
+    name: "Pritam",
+    image: "/team/pritam.png",
+    bio: "The calm force behind chaos. Handles everything from logistics to late-night campfire conversations.",
+    instagram: "https://www.instagram.com/_pritam_366",
   },
   {
-    name: "Karan Mehta",
-    role: "Lead Trek Guide",
-    image: "https://randomuser.me/api/portraits/men/22.jpg",
-    bio: "10+ years guiding treks across Uttarakhand, Himachal & Ladakh.",
+    name: "Ritik Keshri",
+    image: "/team/ritik.png",
+    bio: "The builder. Turned late-night ideas into this entire platform. Code, design, and caffeine.",
+    instagram: "https://www.instagram.com/_ritik.keshri.25/",
   },
   {
-    name: "Priya Desai",
-    role: "Community Manager",
-    image: "https://randomuser.me/api/portraits/women/32.jpg",
-    bio: "Connects travelers, builds bonds, and ensures every trip feels like family.",
+    name: "Shreyansh Keshri",
+    image: "/team/shreyansh.png",
+    bio: "The storyteller. If a reel gave you chills or a photo made you pack your bags — that's him.",
+    instagram: "https://www.instagram.com/shreyansh_keshriii",
   },
 ];
 
@@ -66,34 +74,19 @@ const values = [
 
 const milestones = [
   {
-    year: "2021",
-    title: "The First Trek",
-    desc: "Started with 5 friends and a dream at Kedarnath.",
-  },
-  {
-    year: "2022",
-    title: "First 100 Travelers",
-    desc: "Word of mouth grew. 100 strangers became a community.",
-  },
-  {
-    year: "2023",
-    title: "500+ Travelers",
-    desc: "Expanded to 15+ destinations across the Himalayas.",
-  },
-  {
     year: "2024",
-    title: "Community Platform",
-    desc: "Launched travel buddy matching and group trip features.",
+    title: "The Spark",
+    desc: "Four friends, one spontaneous Kedarnath trip, and a realization that changed everything.",
   },
   {
     year: "2025",
-    title: "10,000+ Stories",
-    desc: "Became India's most loved Himalayan experience platform.",
+    title: "The Idea Takes Shape",
+    desc: "From midnight chai conversations to spreadsheets — we planned our first group trip for strangers.",
   },
   {
     year: "2026",
-    title: "AI-Powered Journeys",
-    desc: "Introduced AI trip planning and virtual trek previews.",
+    title: "BackPack Junction Is Born",
+    desc: "We officially launched. First trip, first travelers, first 5-star reviews. The journey begins.",
   },
 ];
 
@@ -103,34 +96,127 @@ export default function AboutPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0">
+      <section className="relative pt-28 pb-28 md:pt-36 md:pb-36 overflow-hidden min-h-[90vh] flex items-center">
+        {/* Background — semi-transparent to let StarryBackground show through */}
+        <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute inset-0 opacity-15"
             style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80')`,
+              backgroundImage: `url('/team/about-hero.png')`,
               backgroundSize: "cover",
-              backgroundPosition: "center",
+              backgroundPosition: "center 40%",
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-midnight via-midnight/90 to-midnight" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-midnight/40 to-transparent" />
         </div>
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+
+        {/* Content */}
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center w-full">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
           >
-            <span className="text-xs uppercase tracking-[4px] text-teal mb-4 block">
-              Our Story
-            </span>
-            <h1 className="font-[family-name:var(--font-heading)] text-5xl md:text-7xl font-bold text-cream mb-6">
-              Born in the <span className="gradient-text">Mountains</span>
-            </h1>
-            <p className="text-cream/40 text-lg max-w-2xl mx-auto leading-relaxed">
-              We&apos;re not a travel agency. We&apos;re a tribe of mountain
-              lovers who believe that the Himalayas can change your life — if
-              you experience them the right way.
-            </p>
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 mb-10 backdrop-blur-sm"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-cream/50" />
+              <span className="text-xs uppercase tracking-[4px] text-cream/50 font-medium">
+                Established 2026
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-cream/50" />
+            </motion.div>
+
+            {/* Heading */}
+            <div className="overflow-hidden mb-3">
+              <motion.h1
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="font-[family-name:var(--font-heading)] text-5xl sm:text-6xl md:text-8xl font-black text-cream tracking-tight"
+              >
+                4 Friends
+              </motion.h1>
+            </div>
+            <div className="overflow-hidden mb-8">
+              <motion.h1
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.45, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="font-[family-name:var(--font-heading)] text-5xl sm:text-6xl md:text-8xl font-black tracking-tight text-cream/70"
+              >
+                1 Dream
+              </motion.h1>
+            </div>
+
+            {/* Thin separator */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="w-16 h-px bg-cream/20 mx-auto mb-8"
+            />
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="text-cream/40 text-lg md:text-xl max-w-xl mx-auto leading-relaxed mb-14"
+            >
+              We&apos;re not a travel agency. We&apos;re four friends who
+              turned their love for mountains into something meaningful.
+            </motion.p>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              className="flex flex-wrap justify-center gap-12 md:gap-20"
+            >
+              {[
+                { number: "4", label: "Friends" },
+                { number: "2026", label: "Founded" },
+                { number: "100+", label: "Travelers" },
+                { number: "10+", label: "Destinations" },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1 + i * 0.08 }}
+                  className="text-center"
+                >
+                  <div className="text-2xl md:text-3xl font-[family-name:var(--font-heading)] font-bold text-cream/80">
+                    {stat.number}
+                  </div>
+                  <div className="text-cream/25 text-[10px] uppercase tracking-[3px] mt-1.5">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Scroll indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5 }}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2"
+          >
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              className="w-5 h-8 rounded-full border border-cream/15 flex items-start justify-center pt-1.5"
+            >
+              <div className="w-0.5 h-1.5 rounded-full bg-cream/30" />
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -149,26 +235,29 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-4 text-cream/50 leading-relaxed">
               <p>
-                It started with a spontaneous Kedarnath trek in 2021. Five
-                friends, zero planning, and an experience that none of us could
-                forget. The raw beauty of the Himalayas, the warmth of mountain
-                villagers, the silence that speaks louder than any city — it
-                changed us.
+                It started with a spontaneous Kedarnath trip. Four friends, zero
+                planning, and a memory that refused to fade. The raw beauty of
+                the Himalayas, the warmth of mountain villagers, the silence
+                that speaks louder than any city — it changed us forever.
               </p>
               <p>
-                We came back and realized: most people never experience the real
-                Himalayas. They get tourist buses, crowded viewpoints, and
-                cookie-cutter itineraries. The magic gets lost.
+                We came back and realized something: most people never
+                experience the real Himalayas. They get tourist buses, crowded
+                viewpoints, and cookie-cutter itineraries. The magic gets lost
+                in the noise.
               </p>
               <p>
-                So we built BackPack — not as a travel company, but as a
-                movement. Every trip is designed to be cinematic, authentic, and
-                transformative. We handpick routes, partner with local
-                communities, and keep groups small enough to feel like family.
+                So in 2026, four friends decided to do something about it. No
+                investors, no corporate backing — just passion, savings, and a
+                shared belief that travel should be raw, real, and
+                transformative. We built BackPack Junction from scratch — every
+                line of code, every route, every partnership with local
+                communities.
               </p>
               <p className="text-cream/70 font-medium">
-                Today, over 10,000 travelers have lived their Himalayan stories
-                with us. And we&apos;re just getting started.
+                We&apos;re not a company. We&apos;re a group of friends who
+                turned their love for the mountains into something meaningful.
+                And this is just the beginning.
               </p>
             </div>
           </motion.div>
@@ -255,32 +344,68 @@ export default function AboutPage() {
 
       {/* Team */}
       <section className="section-padding relative">
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-burnt-orange/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-6">
+            <motion.span
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-block text-xs uppercase tracking-[4px] text-cream/40 mb-4"
+            >
+              The Gang Behind It All
+            </motion.span>
             <h2 className="section-title text-cream">
-              Meet the <span className="gradient-text">Tribe</span>
+              Meet the <span className="gradient-text">Friends</span>
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center text-cream/40 max-w-xl mx-auto mb-16 leading-relaxed"
+          >
+            No founders, no managers, no hierarchy — just four friends
+            who pooled their savings, quit making excuses, and built something
+            they truly believe in.
+          </motion.p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((t, i) => (
               <motion.div
                 key={t.name}
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 text-center group"
+                transition={{ delay: i * 0.12, type: "spring", damping: 20 }}
+                className="glass-card p-8 text-center group relative overflow-hidden hover:border-white/15 transition-all duration-500"
               >
-                <img
-                  src={t.image}
-                  alt={t.name}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2 border-white/10 group-hover:border-navy-light/40 transition-colors"
-                />
-                <h3 className="text-cream font-semibold">{t.name}</h3>
-                <p className="text-burnt-orange text-xs uppercase tracking-wider mb-3">
-                  {t.role}
+                {/* Avatar Image */}
+                <div className="relative w-24 h-24 mx-auto mb-6 group-hover:scale-105 transition-transform duration-500">
+                  <img
+                    src={t.image}
+                    alt={t.name}
+                    className="w-24 h-24 rounded-full object-cover border border-white/10 group-hover:border-white/25 transition-colors duration-300"
+                  />
+                </div>
+
+                <h3 className="text-cream font-[family-name:var(--font-heading)] font-bold text-lg mb-1">
+                  {t.name}
+                </h3>
+                <p className="text-cream/40 text-sm leading-relaxed mb-5 min-h-[3.5rem]">
+                  {t.bio}
                 </p>
-                <p className="text-cream/40 text-sm">{t.bio}</p>
+
+                {/* Instagram Link */}
+                <a
+                  href={t.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/10 text-cream/50 hover:text-cream hover:border-white/25 transition-all duration-300 text-xs font-medium"
+                >
+                  <InstagramIcon size={14} />
+                  <span>Instagram</span>
+                </a>
               </motion.div>
             ))}
           </div>

@@ -20,8 +20,7 @@ export default function TermsConsent({ accepted, onChange, bookingChargePerHead 
             <ul className="list-disc pl-4 space-y-1">
               <li>₹{bookingChargePerHead.toLocaleString("en-IN")} per head booking charge is <span className="text-red-400 font-medium">non-refundable</span> under any circumstances.</li>
               <li>Cancellation before 15 days of departure: remaining amount refunded within 7-10 working days.</li>
-              <li>Cancellation within 7-15 days: 50% of remaining amount refunded.</li>
-              <li>Cancellation within 7 days of departure: no refund.</li>
+
               <li>No-show on departure date: no refund applicable.</li>
             </ul>
           </div>

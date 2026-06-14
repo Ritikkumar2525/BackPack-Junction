@@ -75,9 +75,25 @@ export async function POST(request) {
       return NextResponse.json({ error: "Trip not found" }, { status: 404 });
     }
 
+    // Calculate available seats dynamically
+    const bookings = await Booking.aggregate([
+      { $match: { 
+        tripId: trip._id, 
+        bookingStatus: { $in: ["Confirmed", "Pending"] },
+        seatsReserved: true
+      }},
+      { $group: { 
+        _id: "$tripId", 
+        bookedSeats: { $sum: { $size: "$travellers" } }
+      }}
+    ]);
+
+    const bookedSeats = bookings.length > 0 ? bookings[0].bookedSeats : 0;
+    const availableSeats = Math.max(0, (trip.totalSeats || 20) - bookedSeats);
+
     // Check seat availability
-    if (trip.availableSeats < travellers.length) {
-      return NextResponse.json({ error: `Only ${trip.availableSeats} seats available. You requested ${travellers.length}.` }, { status: 400 });
+    if (availableSeats < travellers.length) {
+      return NextResponse.json({ error: `Only ${availableSeats} seats available. You requested ${travellers.length}.` }, { status: 400 });
     }
 
     const totalAmount = trip.price * travellers.length;

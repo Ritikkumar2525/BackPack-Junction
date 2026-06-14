@@ -44,6 +44,12 @@ export default function DashboardPage() {
   const totalSpent = bookings.reduce((s, b) => s + (b.amountPaid || 0), 0);
   const upcoming = bookings.filter(b => b.bookingStatus === "Confirmed" || b.bookingStatus === "Pending");
 
+  const getTripDate = (b) => {
+    const dateStr = b.travelDates?.startDate || b.tripId?.startDate;
+    if (!dateStr) return "Date to be confirmed";
+    return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
+
   const stats = [
     { label: "Total Bookings", value: bookings.length, icon: CalendarCheck, color: "text-blue-400" },
     { label: "Confirmed Trips", value: confirmed, icon: MapPin, color: "text-emerald-400" },
@@ -98,78 +104,110 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {upcoming.map((b) => (
+              {upcoming.slice(0, 3).map((b) => {
+                const tripImage = b.tripId?.image || b.tripId?.images?.[0];
+                return (
                 <Link key={b._id || b.bookingId} href={`/dashboard/bookings/${b._id || b.bookingId}`}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-cream/[0.02] hover:bg-cream/[0.04] border border-cream/5 transition-all group">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-burnt-orange/10 text-burnt-orange flex items-center justify-center flex-shrink-0">
-                    <MapPin size={18} />
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-cream/[0.02] hover:bg-cream/[0.06] border border-cream/5 hover:border-burnt-orange/20 transition-all duration-300 group shadow-lg">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-burnt-orange/10 overflow-hidden flex-shrink-0 relative border border-white/5">
+                    {tripImage ? (
+                      <img src={tripImage} alt={b.tripId?.title || "Trip"} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-burnt-orange">
+                        <MapPin size={20} />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-cream text-xs sm:text-sm font-medium truncate">{b.tripId?.title || "Trip Package"}</p>
-                    <p className="text-cream/30 text-[10px] sm:text-xs">Date: To be confirmed</p>
+                    <p className="text-cream text-sm font-semibold truncate group-hover:text-burnt-orange transition-colors">{b.tripId?.title || "Custom Trip Package"}</p>
+                    <p className="text-cream/40 text-xs mt-0.5">{getTripDate(b)}</p>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <span className={`text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${b.bookingStatus === "Confirmed" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
+                  <div className="text-right flex-shrink-0 hidden sm:block">
+                    <span className={`text-[10px] sm:text-xs px-3 py-1 rounded-full font-medium tracking-wide ${b.bookingStatus === "Confirmed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
                       {b.bookingStatus}
                     </span>
                   </div>
-                  <ArrowRight size={14} className="text-cream/20 group-hover:text-cream/50 transition-colors hidden sm:block" />
+                  <div className="w-8 h-8 rounded-full bg-cream/5 flex items-center justify-center group-hover:bg-burnt-orange group-hover:text-white transition-colors">
+                    <ArrowRight size={14} className="text-cream/40 group-hover:text-white transition-colors" />
+                  </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Weather Widget */}
-        <div className="glass-card p-6 overflow-hidden">
-          <h2 className="text-cream font-semibold mb-4">Live Weather</h2>
-          <AnimatePresence mode="wait">
-            {weather && (
-              <motion.div
-                key={weather.location}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}
-              >
-                <p className="text-cream/40 text-xs mb-1">{weather.location}</p>
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <span className="text-3xl sm:text-4xl">{weather.icon}</span>
-                  <div>
-                    <p className="text-2xl sm:text-3xl font-bold text-cream">{weather.temp}°C</p>
-                    <p className="text-cream/30 text-[10px] sm:text-xs">{weather.condition}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="text-center p-2 rounded-lg bg-cream/[0.03]">
-                    <Thermometer size={14} className="mx-auto text-red-400 mb-1" />
-                    <p className="text-cream/40 text-[10px]">Feels like</p>
-                    <p className="text-cream text-xs font-medium">{weather.feelsLike}°C</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-cream/[0.03]">
-                    <Droplets size={14} className="mx-auto text-blue-400 mb-1" />
-                    <p className="text-cream/40 text-[10px]">Humidity</p>
-                    <p className="text-cream text-xs font-medium">{weather.humidity}%</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-cream/[0.03]">
-                    <Wind size={14} className="mx-auto text-teal mb-1" />
-                    <p className="text-cream/40 text-[10px]">Wind</p>
-                    <p className="text-cream text-xs font-medium">{weather.wind} km/h</p>
-                  </div>
-                </div>
-                <h3 className="text-cream/40 text-xs mb-2 uppercase tracking-wider">5-Day Forecast</h3>
-                <div className="space-y-1.5">
-                  {weather.forecast?.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg hover:bg-cream/[0.02]">
-                      <span className="text-cream/40 w-16">{f.day}</span>
-                      <span>{f.condition}</span>
-                      <span className="text-cream/60">{f.high}° / {f.low}°</span>
+        <div className="relative rounded-3xl p-6 overflow-hidden border border-white/10 shadow-2xl group">
+          {/* Dynamic weather background */}
+          <div className="absolute inset-0 bg-[#0a1017] z-0" />
+          <div className="absolute inset-0 opacity-40 mix-blend-screen transition-colors duration-1000 z-0"
+               style={{ background: weather?.condition?.toLowerCase().includes("rain") ? "radial-gradient(circle at top right, #1e3a8a, transparent)" : weather?.condition?.toLowerCase().includes("cloud") ? "radial-gradient(circle at top right, #475569, transparent)" : "radial-gradient(circle at top right, #c67a3c, transparent)" }} 
+          />
+          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-white/5 rounded-full blur-[40px] z-0" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-cream font-semibold tracking-wide flex items-center gap-2">
+                <Cloud size={16} className="text-cream/60" /> Live Weather
+              </h2>
+            </div>
+            
+            <AnimatePresence mode="wait">
+              {weather && (
+                <motion.div
+                  key={weather.location}
+                  initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  <p className="text-cream/60 text-sm font-medium tracking-wider uppercase mb-2">{weather.location}</p>
+                  
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-inner">
+                      <span className="text-4xl drop-shadow-lg">{weather.icon}</span>
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    <div>
+                      <p className="text-4xl font-[family-name:var(--font-heading)] font-bold text-white drop-shadow-md">{weather.temp}°<span className="text-2xl text-cream/50 font-medium">C</span></p>
+                      <p className="text-cream/70 text-sm font-medium capitalize mt-1">{weather.condition}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+                    <div className="text-center p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors">
+                      <Thermometer size={16} className="mx-auto text-red-400 mb-2 drop-shadow" />
+                      <p className="text-cream/50 text-[10px] uppercase tracking-wider font-semibold">Feels</p>
+                      <p className="text-cream text-sm font-bold mt-0.5">{weather.feelsLike}°</p>
+                    </div>
+                    <div className="text-center p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors">
+                      <Droplets size={16} className="mx-auto text-blue-400 mb-2 drop-shadow" />
+                      <p className="text-cream/50 text-[10px] uppercase tracking-wider font-semibold">Humid</p>
+                      <p className="text-cream text-sm font-bold mt-0.5">{weather.humidity}%</p>
+                    </div>
+                    <div className="text-center p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors">
+                      <Wind size={16} className="mx-auto text-teal mb-2 drop-shadow" />
+                      <p className="text-cream/50 text-[10px] uppercase tracking-wider font-semibold">Wind</p>
+                      <p className="text-cream text-sm font-bold mt-0.5">{weather.wind} <span className="text-[10px] text-cream/50">km/h</span></p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10">
+                    <h3 className="text-cream/40 text-[10px] uppercase tracking-[0.2em] font-semibold mb-3">5-Day Forecast</h3>
+                    <div className="space-y-2">
+                      {weather.forecast?.map((f, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm px-3 py-2 rounded-xl hover:bg-white/5 transition-colors group">
+                          <span className="text-cream/70 font-medium w-16 group-hover:text-white transition-colors">{f.day}</span>
+                          <span className="text-lg w-8 text-center drop-shadow-sm">{f.icon || f.condition === 'Sunny' ? '☀️' : f.condition.includes('Rain') ? '🌧️' : '☁️'}</span>
+                          <span className="text-cream/40 font-medium text-xs"><span className="text-cream group-hover:text-white transition-colors">{f.high}°</span> / {f.low}°</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </motion.div>
 

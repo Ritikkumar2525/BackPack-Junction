@@ -60,8 +60,7 @@ export default function DestinationsPage() {
 
       {/* Hero */}
       <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-deep/50 to-midnight pointer-events-none" />
-        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-navy-light/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-midnight/50 via-transparent to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div

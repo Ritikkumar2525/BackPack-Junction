@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function BeforeBookingGallery() {
   const [images, setImages] = useState([]);
@@ -52,12 +53,12 @@ export default function BeforeBookingGallery() {
               Join thousands of travelers who have found their calling in the mountains. Disconnect from the noise, bond with like-minded souls, and create memories that last a lifetime.
             </p>
             <div className="pt-4">
-              <button 
-                onClick={() => window.location.href = "/dashboard/book-trip"}
-                className="btn-primary px-8 py-4 text-lg w-full sm:w-auto shadow-[0_0_30px_rgba(198,122,60,0.3)] hover:shadow-[0_0_50px_rgba(198,122,60,0.5)] transition-shadow"
+              <Link 
+                href="/dashboard/book-trip"
+                className="btn-primary px-8 py-4 text-lg w-full sm:w-auto shadow-[0_0_30px_rgba(198,122,60,0.3)] hover:shadow-[0_0_50px_rgba(198,122,60,0.5)] transition-shadow inline-block text-center"
               >
                 <span className="relative z-10">Find Your Next Adventure</span>
-              </button>
+              </Link>
             </div>
           </motion.div>
 

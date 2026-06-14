@@ -233,14 +233,14 @@ export default function DestinationPage({ destination: dest }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-cream/40 text-sm hover:text-cream/70 transition-colors mb-6"
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 text-cream/70 hover:text-cream transition-colors text-sm font-medium"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -250,8 +250,8 @@ export default function DestinationPage({ destination: dest }) {
               >
                 <path d="m15 18-6-6 6-6" />
               </svg>
-              Back to Home
-            </Link>
+              Back
+            </button>
           </motion.div>
 
           <motion.div
@@ -470,7 +470,7 @@ export default function DestinationPage({ destination: dest }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="btn-primary text-lg px-10 py-4"
-                onClick={() => window.location.href = `/dashboard/book-trip?destination=${encodeURIComponent(dest?.name || "")}`}
+                onClick={() => router.push(`/dashboard/book-trip?destination=${encodeURIComponent(dest?.name || "")}`)}
               >
                 <span className="relative z-10">
                   Book Now — ₹{dest?.price ? Number(dest.price).toLocaleString('en-IN') : 'N/A'}

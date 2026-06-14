@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Users, ArrowRight, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function Countdown({ date }) {
   const [time, setTime] = useState(() => {
@@ -67,24 +68,28 @@ function Countdown({ date }) {
   );
 }
 
+// Cache data in memory to prevent height collapse on back navigation
+let cachedTrips = null;
+
 export default function UpcomingTrips() {
-  const [trips, setTrips] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const [trips, setTrips] = useState(cachedTrips || []);
+  const [loading, setLoading] = useState(!cachedTrips);
   const [now] = useState(() => Date.now());
 
   useEffect(() => {
     async function fetchTrips() {
+      if (cachedTrips) return; // Prevent re-fetching if already cached
       try {
         const res = await fetch("/api/trips?filter=upcoming");
         const data = await res.json();
         if (data && Array.isArray(data.trips)) {
+          cachedTrips = data.trips;
           setTrips(data.trips);
         } else {
-          console.error("Trips API did not return an array:", data);
           setTrips([]);
         }
       } catch (err) {
-        console.error("Failed to fetch trips:", err);
         setTrips([]);
       } finally {
         setLoading(false);
@@ -133,10 +138,11 @@ export default function UpcomingTrips() {
         </div>
 
         {/* Trip Cards — 2 columns */}
-        {loading ? (
-           <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-burnt-orange border-t-transparent rounded-full animate-spin"></div></div>
-        ) : trips.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+        <div className="min-h-[500px]">
+          {loading ? (
+             <div className="flex justify-center py-32"><div className="w-12 h-12 border-4 border-burnt-orange border-t-transparent rounded-full animate-spin"></div></div>
+          ) : trips.length === 0 ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
             <div className="w-16 h-16 rounded-2xl bg-burnt-orange/10 text-burnt-orange flex items-center justify-center mx-auto mb-4">
               <Calendar size={28} />
             </div>
@@ -205,10 +211,10 @@ export default function UpcomingTrips() {
               }
               
               return (
-                <Link
-                  href={`/trips/${trip.id || trip._id}`}
+                <div
                   key={trip._id || trip.id || `trip-${i}`}
-                  className="relative group rounded-[1.5rem] p-[1px] overflow-hidden bg-white/5 shadow-2xl hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)] transition-all duration-500 flex flex-col block"
+                  onClick={() => router.push(`/trips/${trip.id || trip._id}`)}
+                  className="relative group rounded-[1.5rem] p-[1px] overflow-hidden bg-white/5 shadow-2xl hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)] transition-all duration-500 flex flex-col cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
                   
@@ -311,14 +317,15 @@ export default function UpcomingTrips() {
                         </div>
                         
                         {canBook ? (
-                          <button
-                            onClick={() => window.location.href = `/dashboard/book-trip?trip=${trip._id || trip.id}`}
+                          <Link
+                            href={`/dashboard/book-trip?trip=${trip._id || trip.id}`}
+                            onClick={(e) => e.stopPropagation()}
                             className="group/btn relative overflow-hidden rounded-[14px] bg-gradient-to-b from-white to-gray-200 text-[#0d141e] font-bold text-xs py-2.5 px-5 shadow-[0_4px_10px_rgba(255,255,255,0.15)] hover:shadow-[0_6px_20px_rgba(255,255,255,0.3)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
                           >
                             <span className="relative z-10 flex items-center gap-1.5">
                               {statusLabel} <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                             </span>
-                          </button>
+                          </Link>
                         ) : (
                           <div className="py-2.5 px-5 rounded-[14px] bg-white/5 text-cream/40 font-bold text-xs border border-white/5 cursor-not-allowed">
                             {statusLabel}
@@ -327,32 +334,33 @@ export default function UpcomingTrips() {
                       </div>
                     </div>
                   </div>
-                </Link>
+              </div>
               );
             })}
             </div>
             
-            {trips.length > 4 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mt-16"
-              >
-                <Link href="/trips">
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="btn-secondary px-10 py-4 inline-flex items-center gap-3 text-sm"
-                  >
-                    View All Upcoming Trips
-                    <ArrowRight size={16} />
-                  </motion.button>
-                </Link>
-              </motion.div>
-            )}
-          </>
-        )}
+              {trips.length > 4 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mt-16"
+                >
+                  <Link href="/trips">
+                    <motion.button
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="btn-secondary px-10 py-4 inline-flex items-center gap-3 text-sm"
+                    >
+                      View All Upcoming Trips
+                      <ArrowRight size={16} />
+                    </motion.button>
+                  </Link>
+                </motion.div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );

@@ -288,7 +288,7 @@ export default function AdminTripsPage() {
                       <span className={`text-[10px] px-2.5 py-1 rounded-full ${t.isPublished ? "bg-emerald-500/10 text-emerald-400" : "bg-cream/5 text-cream/30"}`}>{t.isPublished ? "Published" : "Draft"}</span>
                     </div>
                     <div className="flex flex-wrap gap-4 mt-3 text-xs text-cream/30">
-                      <span className="flex items-center gap-1"><Users size={12} /> {t.bookedSeats || (t.totalSeats - t.availableSeats)}/{t.totalSeats} booked</span>
+                      <span className="flex items-center gap-1"><Users size={12} /> {t.bookedSeats ?? 0}/{t.totalSeats} booked</span>
                       <span className="flex items-center gap-1 text-burnt-orange"><DollarSign size={12} /> ₹{t.price?.toLocaleString("en-IN")}</span>
                       {t.startDate && (
                         <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(t.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>

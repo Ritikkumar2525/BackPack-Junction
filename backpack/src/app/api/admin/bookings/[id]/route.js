@@ -51,22 +51,13 @@ export async function PATCH(request, { params }) {
 
     await booking.save();
 
-    // Handle Seat Inventory
+    // Handle Seat Inventory (Dynamic calculation relies on seatsReserved flag)
     if (booking.bookingStatus === 'Confirmed' && !booking.seatsReserved) {
-      const trip = await Trip.findById(booking.tripId);
-      if (trip && trip.availableSeats >= booking.travellers.length) {
-        trip.availableSeats -= booking.travellers.length;
-        await trip.save();
-        booking.seatsReserved = true;
-        await booking.save();
-      }
+      booking.seatsReserved = true;
+      await booking.save();
     } else if (booking.bookingStatus === 'Cancelled' && booking.seatsReserved) {
-      const trip = await Trip.findById(booking.tripId);
-      if (trip) {
-        trip.availableSeats = Math.min(trip.totalSeats, trip.availableSeats + booking.travellers.length);
-        await trip.save();
-        booking.seatsReserved = false;
-      }
+      booking.seatsReserved = false;
+      await booking.save();
     }
 
     // Send notifications if status changed

@@ -52,10 +52,8 @@ export async function POST(req) {
 
     await booking.save();
 
-    // Update available seats on the trip (only if not already reserved)
-    if (trip && !booking.seatsReserved) {
-      trip.availableSeats = Math.max(0, trip.availableSeats - booking.travellers.length);
-      await trip.save();
+    // Mark seats as reserved
+    if (!booking.seatsReserved) {
       booking.seatsReserved = true;
       await booking.save();
     }

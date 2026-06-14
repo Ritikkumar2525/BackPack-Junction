@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
     // Compute accurate seat counts from confirmed bookings
     const bookings = await Booking.aggregate([
       { $match: { 
-        tripId: trip._id.toString(), 
+        tripId: new mongoose.Types.ObjectId(trip._id), 
         bookingStatus: { $in: ["Confirmed", "Pending"] },
         seatsReserved: true
       }},

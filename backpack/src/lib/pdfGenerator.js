@@ -74,7 +74,9 @@ export async function generateInvoicePDF(booking, trip) {
       doc.text('Client Name:', 40, startY + 25); doc.text(primaryTraveller.fullName || 'N/A', 110, startY + 25);
       doc.moveTo(110, startY + 35).lineTo(280, startY + 35).stroke('#E2E8F0');
       
-      doc.text('Phone/Email:', 40, startY + 40); doc.text(`${primaryTraveller.contactNumber || ''} / ${primaryTraveller.emailAddress || ''}`, 110, startY + 40);
+      doc.text('Phone/Email:', 40, startY + 40); 
+      const contactInfo = [primaryTraveller.contactNumber, primaryTraveller.emailAddress].filter(Boolean).join(' / ') || 'N/A';
+      doc.text(contactInfo, 110, startY + 40);
       doc.moveTo(110, startY + 50).lineTo(280, startY + 50).stroke('#E2E8F0');
       
       doc.text('Address:', 40, startY + 55); doc.text(primaryTraveller.city || 'N/A', 110, startY + 55);
@@ -91,11 +93,26 @@ export async function generateInvoicePDF(booking, trip) {
       doc.text('Duration:', 310, startY + 40); doc.text(trip.duration || 'N/A', 380, startY + 40);
       doc.moveTo(380, startY + 50).lineTo(555, startY + 50).stroke('#E2E8F0');
       
-      doc.text('Travelers:', 310, startY + 55); doc.text(String(pax), 380, startY + 55);
+      let dateOfJourney = 'N/A';
+      if (booking.travelDates?.startDate) {
+        dateOfJourney = new Date(booking.travelDates.startDate).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+      } else if (trip.startDate) {
+        dateOfJourney = new Date(trip.startDate).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+      }
+      doc.text('Journey Date:', 310, startY + 55); doc.text(dateOfJourney, 380, startY + 55);
       doc.moveTo(380, startY + 65).lineTo(555, startY + 65).stroke('#E2E8F0');
+      
+      doc.text('Travelers:', 310, startY + 70); doc.text(String(pax), 380, startY + 70);
+      doc.moveTo(380, startY + 80).lineTo(555, startY + 80).stroke('#E2E8F0');
+
+      const sharingPref = primaryTraveller.specialRequests?.toLowerCase().includes('sharing') 
+        ? primaryTraveller.specialRequests 
+        : (pax === 1 ? 'Solo / As requested' : pax === 2 ? 'Double Sharing' : pax === 3 ? 'Triple Sharing' : 'Quad Sharing');
+      doc.text('Room Sharing:', 310, startY + 85); doc.text(sharingPref, 380, startY + 85);
+      doc.moveTo(380, startY + 95).lineTo(555, startY + 95).stroke('#E2E8F0');
 
       // ----- Table -----
-      startY = 300;
+      startY = 315;
       
       // Table Header Background
       doc.rect(40, startY, doc.page.width - 80, 20).fill('#EBF5FF');
@@ -210,8 +227,7 @@ export async function generateInvoicePDF(booking, trip) {
       doc.font('Helvetica-Bold').fontSize(9).text('TERMS & CONDITIONS:', 40, startY);
       doc.font('Helvetica').fontSize(8).fillColor('#4A5568');
       doc.text('1. INR 1,500 per head booking charge is non-refundable under any circumstances.', 40, startY + 15);
-      doc.text('2. Cancellation within 7-15 days: 50% refund. Within 7 days: No refund.', 40, startY + 27);
-      doc.text('3. Please quote the invoice number when making the payment.', 40, startY + 39);
+      doc.text('2. Please quote the invoice number when making the payment.', 40, startY + 27);
       
       // Thank You Message
       doc.font('Helvetica-BoldOblique').fontSize(11).fillColor('#081630');

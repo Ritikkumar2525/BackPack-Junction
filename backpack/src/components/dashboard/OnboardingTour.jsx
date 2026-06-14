@@ -61,9 +61,6 @@ export default function OnboardingTour() {
     if (currentTargetId) {
       const el = document.getElementById(currentTargetId);
       if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
-        // Scroll into view if not in viewport
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
         const rect = el.getBoundingClientRect();
         setTargetRect({
           top: rect.top,
@@ -71,12 +68,6 @@ export default function OnboardingTour() {
           width: rect.width,
           height: rect.height,
         });
-        
-        // Add highlight class to element
-        el.classList.add('ring-2', 'ring-burnt-orange', 'ring-offset-2', 'ring-offset-[#0a0f18]', 'z-[60]', 'relative');
-        return () => {
-          el.classList.remove('ring-2', 'ring-burnt-orange', 'ring-offset-2', 'ring-offset-[#0a0f18]', 'z-[60]', 'relative');
-        };
       } else {
         setTargetRect(null);
       }
@@ -85,14 +76,48 @@ export default function OnboardingTour() {
     }
   };
 
+  // Setup highlight and scroll into view only when the step changes
   useEffect(() => {
-    const cleanup = updateTargetRect();
-    window.addEventListener("resize", updateTargetRect);
-    window.addEventListener("scroll", updateTargetRect, { passive: true });
+    if (!isVisible) return;
+    const currentTargetId = STEPS[currentStep].targetId;
+    if (!currentTargetId) return;
+    
+    const el = document.getElementById(currentTargetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-burnt-orange', 'ring-offset-2', 'ring-offset-[#0a0f18]', 'z-[60]', 'relative');
+      
+      // Allow scroll animation to start before calculating rect
+      setTimeout(updateTargetRect, 50);
+
+      return () => {
+        el.classList.remove('ring-2', 'ring-burnt-orange', 'ring-offset-2', 'ring-offset-[#0a0f18]', 'z-[60]', 'relative');
+      };
+    }
+  }, [currentStep, isVisible]);
+
+  // Handle high-performance tracking on scroll and resize
+  useEffect(() => {
+    if (!isVisible) return;
+    
+    let ticking = false;
+    const handleScrollOrResize = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateTargetRect();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    updateTargetRect();
+    window.addEventListener("resize", handleScrollOrResize);
+    window.addEventListener("scroll", handleScrollOrResize, { passive: true });
+    
     return () => {
-      window.removeEventListener("resize", updateTargetRect);
-      window.removeEventListener("scroll", updateTargetRect);
-      if (cleanup) cleanup();
+      window.removeEventListener("resize", handleScrollOrResize);
+      window.removeEventListener("scroll", handleScrollOrResize);
     };
   }, [currentStep, isVisible]);
 
@@ -156,18 +181,9 @@ export default function OnboardingTour() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className="fixed z-[60] w-[320px]"
-          style={targetRect ? {
-            top: targetRect.top,
-            left: targetRect.left + targetRect.width + 30, // Show to the right of the sidebar
-          } : {
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)", // Center for steps with no target
-          }}
+          className="fixed z-[60] w-[340px] max-w-[90vw] bottom-10 left-1/2 -translate-x-1/2"
         >
-          {/* Prevent going off-screen on mobile by overriding inline styles with CSS via media query */}
-          <div className="bg-[#0a1017]/60 backdrop-blur-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.4)] rounded-2xl overflow-hidden relative @container max-w-[90vw] -ml-[max(0px,calc(100%-100vw))]">
+          <div className="bg-[#0a1017]/80 backdrop-blur-3xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden relative">
             
             {/* Ambient Glow */}
             <div className="absolute -top-16 -right-16 w-32 h-32 bg-burnt-orange/20 rounded-full blur-[40px] pointer-events-none" />
@@ -236,17 +252,6 @@ export default function OnboardingTour() {
           </div>
         </motion.div>
       </AnimatePresence>
-
-      {/* Responsive positioning fix for mobile */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media (max-width: 1024px) {
-          .fixed.z-\\[60\\] {
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-          }
-        }
-      `}} />
     </>
   );
 }

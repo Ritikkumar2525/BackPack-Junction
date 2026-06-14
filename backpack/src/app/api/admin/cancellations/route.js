@@ -66,15 +66,8 @@ export async function PATCH(request) {
       
       // Release seats
       if (booking.seatsReserved && booking.tripId) {
-        const trip = await Trip.findById(booking.tripId._id);
-        if (trip) {
-          const bookedCount = booking.travellers?.length || 1;
-          trip.availableSeats = Math.min(trip.totalSeats, (trip.availableSeats || 0) + bookedCount);
-          await trip.save();
-        }
         booking.seatsReserved = false;
       }
-      
       await booking.save();
 
       // Notify User

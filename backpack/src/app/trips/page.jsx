@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import UpcomingTrips from "@/components/trips/UpcomingTrips";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function TripsPage() {
   const [pastTrips, setPastTrips] = useState([]);
@@ -61,46 +62,47 @@ export default function TripsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allPastTrips.map((trip, i) => (
-              <div
-                key={trip._id || trip.title || `past-${i}`}
-                className="glass-card overflow-hidden group transform-gpu"
-              >
-                <div className="relative h-48 overflow-hidden bg-[#0C1420]">
-                  <Image
-                    src={trip.image || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"}
-                    alt={trip.title || "Trip Image"}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="absolute inset-0 object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 via-transparent to-transparent" />
-                  <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 text-[10px] text-cream/60 font-medium">
-                    ✅ Completed
+              <Link href={`/past-expeditions/${trip._id || trip.slug || ''}`} key={trip._id || trip.title || `past-${i}`}>
+                <div
+                  className="glass-card overflow-hidden group transform-gpu cursor-pointer h-full"
+                >
+                  <div className="relative h-48 overflow-hidden bg-[#0C1420]">
+                    <Image
+                      src={trip.image || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"}
+                      alt={trip.title || "Trip Image"}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="absolute inset-0 object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 via-transparent to-transparent" />
+                    <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 text-[10px] text-cream/60 font-medium">
+                      ✅ Completed
+                    </div>
+                    <div className="absolute bottom-4 left-4">
+                      <span className="text-yellow-400 text-sm">★</span>
+                      <span className="text-cream text-sm font-semibold ml-1">
+                        {trip.rating}
+                      </span>
+                    </div>
                   </div>
-                  <div className="absolute bottom-4 left-4">
-                    <span className="text-yellow-400 text-sm">★</span>
-                    <span className="text-cream text-sm font-semibold ml-1">
-                      {trip.rating}
-                    </span>
+                  <div className="p-5">
+                    <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold text-cream mb-1 group-hover:text-burnt-orange transition-colors">
+                      {trip.title}
+                    </h3>
+                    <p className="text-cream/40 text-sm mb-3">
+                      {trip.destination} · {trip.date}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-teal text-xs font-medium">
+                        {trip.travelers} travelers joined
+                      </span>
+                      <span className="text-xs text-cream/40 group-hover:text-burnt-orange transition-colors">
+                        View Details →
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-5">
-                  <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold text-cream mb-1">
-                    {trip.title}
-                  </h3>
-                  <p className="text-cream/40 text-sm mb-3">
-                    {trip.destination} · {trip.date}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-teal text-xs font-medium">
-                      {trip.travelers} travelers joined
-                    </span>
-                    <button className="text-xs text-cream/40 hover:text-cream/70 transition-colors">
-                      View Photos →
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

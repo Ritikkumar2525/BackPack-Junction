@@ -124,11 +124,14 @@ function BookTripForm() {
   }, [tripIdParam, destinationParam]);
 
   const handleTravelerCountChange = (n) => {
-    setTravelerCount(n);
+    const maxAvailable = selected ? selected.availableSeats : 100;
+    const cappedN = Math.min(n, maxAvailable);
+    if (cappedN < 1) return; // Prevent 0 or negative
+    setTravelerCount(cappedN);
     setTravellersData(prev => {
       const d = [...prev];
-      if (n > prev.length) { for (let i = prev.length; i < n; i++) d.push({ ...emptyTraveller }); }
-      else if (n < prev.length) return d.slice(0, n);
+      if (cappedN > prev.length) { for (let i = prev.length; i < cappedN; i++) d.push({ ...emptyTraveller }); }
+      else if (cappedN < prev.length) return d.slice(0, cappedN);
       return d;
     });
   };
@@ -281,12 +284,20 @@ function BookTripForm() {
                   </div>
                 </div>
                 <div className="md:border-l md:border-white/5 md:pl-6">
-                  <label className="text-cream/40 text-[11px] uppercase tracking-widest font-semibold mb-3 block">Travelers</label>
-                  <div className="flex items-center gap-4 bg-black/30 p-2 rounded-2xl border border-white/5">
-                    <button onClick={() => handleTravelerCountChange(Math.max(1, travelerCount - 1))} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-burnt-orange/20 text-cream/70 hover:text-burnt-orange transition-colors flex items-center justify-center text-lg">−</button>
+                  <label className="text-cream/40 text-[11px] uppercase tracking-widest font-semibold mb-3 block flex items-center justify-between">
+                    <span>Travelers</span>
+                    {selected && selected.availableSeats <= 0 && <span className="text-red-400 font-bold">SOLD OUT</span>}
+                  </label>
+                  <div className={`flex items-center gap-4 bg-black/30 p-2 rounded-2xl border ${selected?.availableSeats <= 0 ? 'border-red-500/30 opacity-50' : 'border-white/5'}`}>
+                    <button onClick={() => handleTravelerCountChange(travelerCount - 1)} disabled={travelerCount <= 1 || selected?.availableSeats <= 0} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-burnt-orange/20 text-cream/70 hover:text-burnt-orange transition-colors flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed">−</button>
                     <span className="text-cream text-xl font-bold w-6 text-center">{travelerCount}</span>
-                    <button onClick={() => handleTravelerCountChange(travelerCount + 1)} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-burnt-orange/20 text-cream/70 hover:text-burnt-orange transition-colors flex items-center justify-center text-lg">+</button>
+                    <button onClick={() => handleTravelerCountChange(travelerCount + 1)} disabled={travelerCount >= (selected?.availableSeats || 100) || selected?.availableSeats <= 0} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-burnt-orange/20 text-cream/70 hover:text-burnt-orange transition-colors flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed">+</button>
                   </div>
+                  {selected && selected.availableSeats > 0 && selected.availableSeats <= 5 && (
+                    <div className="text-red-400 text-[10px] uppercase font-bold tracking-wider mt-2 text-center animate-pulse">
+                      Only {selected.availableSeats} seats left!
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
