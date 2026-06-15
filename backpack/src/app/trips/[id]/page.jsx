@@ -176,7 +176,7 @@ export default function TripDetailsPage({ params }) {
                 <p className="text-cream font-semibold text-sm">Detailed Itinerary PDF</p>
                 <p className="text-cream/40 text-xs">Download the complete day-wise plan</p>
               </div>
-              <a href={trip.itineraryPdf} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-blue-500/15 text-blue-400 text-xs font-bold rounded-lg hover:bg-blue-500/25 transition-colors flex items-center gap-1.5">
+              <a href={`/api/trips/${trip._id}/itinerary`} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-blue-500/15 text-blue-400 text-xs font-bold rounded-lg hover:bg-blue-500/25 transition-colors flex items-center gap-1.5">
                 <Download size={14} /> Preview PDF
               </a>
             </div>

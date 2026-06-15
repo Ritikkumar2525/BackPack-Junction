@@ -21,9 +21,12 @@ export async function POST(request) {
 
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     const resourceType = isPdf ? 'raw' : 'auto';
+    
+    // For PDFs, append .dat to bypass Cloudinary's default raw PDF block
+    const uploadFilename = isPdf ? `${file.name}.dat` : file.name;
 
     // Upload to a general folder, e.g., 'backpack_general'
-    const cloudResult = await uploadToCloudinary(buffer, 'backpack_general', resourceType, file.name);
+    const cloudResult = await uploadToCloudinary(buffer, 'backpack_general', resourceType, uploadFilename);
 
     return NextResponse.json({ url: cloudResult.secure_url }, { status: 201 });
   } catch (error) {

@@ -401,7 +401,20 @@ export default function AdminTripsPage() {
                       <p className="text-cream text-sm font-medium">Itinerary PDF Attached</p>
                       <p className="text-cream/30 text-[10px]">Click Preview to view, or Replace to upload a new one</p>
                     </div>
-                    <button type="button" onClick={() => { const w = window.open(); w.document.write(`<iframe src="${formData.itineraryPdf}" style="width:100%;height:100%;border:none;"></iframe>`); }} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 border border-blue-500/20 px-3 py-1.5 rounded-lg"><Eye size={12}/> Preview</button>
+                    <button type="button" onClick={() => {
+                      if (formData.itineraryPdf.startsWith('data:')) {
+                        const byteString = atob(formData.itineraryPdf.split(',')[1]);
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                        const blob = new Blob([ab], { type: 'application/pdf' });
+                        window.open(URL.createObjectURL(blob), '_blank');
+                      } else if (formData.itineraryPdf.startsWith('http')) {
+                        window.open(`/api/preview-pdf?url=${encodeURIComponent(formData.itineraryPdf)}`, '_blank');
+                      } else {
+                        window.open(formData.itineraryPdf, '_blank');
+                      }
+                    }} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 border border-blue-500/20 px-3 py-1.5 rounded-lg"><Eye size={12}/> Preview</button>
                     <button type="button" onClick={() => setFormData({...formData, itineraryPdf: ""})} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-500/20 px-3 py-1.5 rounded-lg"><XIcon size={12}/> Remove</button>
                   </div>
                 ) : (
