@@ -20,7 +20,7 @@ export async function POST(request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to a general folder, e.g., 'backpack_general'
-    const cloudResult = await uploadToCloudinary(buffer, 'backpack_general', 'auto');
+    const cloudResult = await uploadToCloudinary(buffer, 'backpack_general', 'auto', file.name);
 
     return NextResponse.json({ url: cloudResult.secure_url }, { status: 201 });
   } catch (error) {

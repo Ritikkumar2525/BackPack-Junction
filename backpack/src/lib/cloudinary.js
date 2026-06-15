@@ -6,13 +6,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadToCloudinary = (buffer, folder = 'backpack_gallery', resourceType = 'auto') => {
+export const uploadToCloudinary = (buffer, folder = 'backpack_gallery', resourceType = 'auto', filename = undefined) => {
   return new Promise((resolve, reject) => {
+    const options = {
+      folder,
+      resource_type: resourceType,
+    };
+    
+    if (filename) {
+      options.public_id = filename.split('.').slice(0, -1).join('.');
+      options.format = filename.split('.').pop();
+    }
+
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: resourceType,
-      },
+      options,
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
