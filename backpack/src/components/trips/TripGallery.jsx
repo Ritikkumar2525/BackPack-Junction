@@ -30,13 +30,13 @@ export default function TripGallery({ images = [] }) {
         {lightbox >= 0 && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 md:p-12"
             onClick={() => setLightbox(-1)}
           >
-            <button onClick={(e) => { e.stopPropagation(); setLightbox(-1); }} className="absolute top-6 right-6 text-white/60 hover:text-white z-10"><X size={28} /></button>
-            <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 md:left-8 text-white/60 hover:text-white z-10 p-2 rounded-full bg-white/10"><ChevronLeft size={24} /></button>
-            <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 md:right-8 text-white/60 hover:text-white z-10 p-2 rounded-full bg-white/10"><ChevronRight size={24} /></button>
-            <div className="relative w-full max-w-4xl aspect-video" onClick={(e) => e.stopPropagation()}>
+            <button onClick={(e) => { e.stopPropagation(); setLightbox(-1); }} className="absolute top-6 right-6 text-white/60 hover:text-white z-10 p-2"><X size={28} /></button>
+            <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 md:left-8 text-white/60 hover:text-white z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"><ChevronLeft size={24} /></button>
+            <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 md:right-8 text-white/60 hover:text-white z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"><ChevronRight size={24} /></button>
+            <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
               <Image src={images[lightbox]} alt="" fill className="object-contain" />
             </div>
             <p className="absolute bottom-6 text-white/40 text-sm">{lightbox + 1} / {images.length}</p>
