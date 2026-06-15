@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Calendar, Users, Edit, Trash2, Plus, Mountain, DollarSign, ArrowLeft, Image as ImageIcon, Video, List, CheckCircle2, XCircle, Info, FileText, Route, Upload, Eye, X as XIcon, ImagePlus, Loader2 as Loader2Icon } from "lucide-react";
 import toast from "react-hot-toast";
+import { compressImage } from "@/lib/imageCompression";
 
 export default function AdminTripsPage() {
   const [trips, setTrips] = useState([]);
@@ -54,8 +55,15 @@ export default function AdminTripsPage() {
           continue;
         }
 
+        // Compress image before uploading
+        const compressedFile = await compressImage(file, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.8
+        });
+
         const uploadData = new FormData();
-        uploadData.append("file", file);
+        uploadData.append("file", compressedFile);
         const res = await fetch("/api/upload", { method: "POST", body: uploadData });
         
         if (res.ok) {
@@ -94,10 +102,17 @@ export default function AdminTripsPage() {
         continue;
       }
       
-      const uploadData = new FormData();
-      uploadData.append("file", file);
-
       try {
+        // Compress image before uploading
+        const compressedFile = await compressImage(file, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.8
+        });
+
+        const uploadData = new FormData();
+        uploadData.append("file", compressedFile);
+
         const res = await fetch("/api/upload", { method: "POST", body: uploadData });
         if (res.ok) {
           const data = await res.json();
