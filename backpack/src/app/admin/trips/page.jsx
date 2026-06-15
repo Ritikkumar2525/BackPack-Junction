@@ -179,14 +179,32 @@ export default function AdminTripsPage() {
     setShowForm(true);
   };
 
-  const handlePdfUpload = (e) => {
+  const handlePdfUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.type !== 'application/pdf') { alert('Please upload a PDF file.'); return; }
-    if (file.size > 10 * 1024 * 1024) { alert('PDF must be under 10MB.'); return; }
-    const reader = new FileReader();
-    reader.onload = () => setFormData(prev => ({ ...prev, itineraryPdf: reader.result }));
-    reader.readAsDataURL(file);
+    if (file.type !== 'application/pdf') { toast.error('Please upload a PDF file.'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('PDF must be under 10MB.'); return; }
+    
+    setImageUploading(true);
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: uploadData });
+      if (res.ok) {
+        const data = await res.json();
+        setFormData(prev => ({ ...prev, itineraryPdf: data.url }));
+        toast.success('PDF uploaded successfully!');
+      } else {
+        toast.error('Failed to upload PDF.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('An error occurred during PDF upload.');
+    } finally {
+      setImageUploading(false);
+      e.target.value = null;
+    }
   };
 
   const handleDelete = async (id, e) => {
