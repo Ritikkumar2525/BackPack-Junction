@@ -238,21 +238,41 @@ export default function AdminTripsPage() {
         payload.availableSeats = payload.totalSeats;
       }
 
+      // Remove MongoDB internal fields to reduce payload size
+      delete payload.__v;
+      delete payload.createdAt;
+      delete payload.updatedAt;
+      delete payload.bookedSeats; // computed field, not stored
+
       const res = await fetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
+        toast.success(payload._id ? 'Trip updated successfully!' : 'Trip created successfully!');
         setShowForm(false);
         setFormData(getInitialFormState());
         fetchTrips();
       } else {
-        const errData = await res.json();
-        alert(errData.error || 'Failed to save trip');
+        // Handle both JSON and non-JSON error responses (Vercel returns plain text for 413)
+        let errorMsg = 'Failed to save trip';
+        try {
+          const errData = await res.json();
+          errorMsg = errData.error || errorMsg;
+        } catch {
+          const text = await res.text().catch(() => '');
+          if (res.status === 413) {
+            errorMsg = 'Trip data is too large. Try reducing the number of gallery images or shortening text fields.';
+          } else {
+            errorMsg = text || `Server error (${res.status})`;
+          }
+        }
+        toast.error(errorMsg);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Network error. Please try again.');
     }
     setSaving(false);
   };

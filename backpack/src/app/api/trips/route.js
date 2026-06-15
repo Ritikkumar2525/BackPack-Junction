@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { notifySubscribersOfNewTrip } from '@/lib/emailService';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function GET(request) {
   try {
