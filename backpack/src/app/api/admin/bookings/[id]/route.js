@@ -67,7 +67,22 @@ export async function PATCH(request, { params }) {
       if (booking.bookingStatus === 'Confirmed') {
         try {
           const pdfBuffer = await generateInvoicePDF(booking, trip);
-          await sendBookingEmail(booking, trip, pdfBuffer);
+          
+          let itineraryBuffer;
+          if (trip?.itineraryPdf) {
+            if (trip.itineraryPdf.startsWith('http')) {
+              const res = await fetch(trip.itineraryPdf);
+              const arrayBuffer = await res.arrayBuffer();
+              itineraryBuffer = Buffer.from(arrayBuffer);
+            } else {
+              const base64Data = trip.itineraryPdf.split(',')[1];
+              if (base64Data) {
+                itineraryBuffer = Buffer.from(base64Data, 'base64');
+              }
+            }
+          }
+
+          await sendBookingEmail(booking, trip, pdfBuffer, itineraryBuffer);
           await sendWhatsAppConfirmation(booking, trip);
         } catch (err) {
           console.error("Failed to send confirmation email/invoice:", err);

@@ -188,7 +188,7 @@ export async function sendBookingEmail(booking, trip, invoicePdfBuffer, itinerar
               Questions? Reach us at <a href="mailto:junctionbackpack@gmail.com" style="color:#C67A3C;text-decoration:none;font-weight:600;">junctionbackpack@gmail.com</a>
             </p>
             <p style="margin:0 0 12px;font-size:12px;color:rgba(245,240,232,0.3);">
-              📞 Call/WhatsApp: <a href="tel:+919876543210" style="color:rgba(245,240,232,0.5);text-decoration:none;">+91 98765 43210</a>
+              📞 Call/WhatsApp: <a href="tel:+918595054501" style="color:rgba(245,240,232,0.5);text-decoration:none;">+91 85950 54501</a>
             </p>
             <div style="margin:16px 0 0;">
               <a href="https://instagram.com/backpack_junction" style="color:#C67A3C;text-decoration:none;font-size:11px;margin:0 8px;">Instagram</a>

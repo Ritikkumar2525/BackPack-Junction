@@ -14,8 +14,12 @@ export const uploadToCloudinary = (buffer, folder = 'backpack_gallery', resource
     };
     
     if (filename) {
-      options.public_id = filename.split('.').slice(0, -1).join('.');
-      options.format = filename.split('.').pop();
+      if (resourceType === 'raw') {
+        options.public_id = filename; // For raw, extension must be in public_id
+      } else {
+        options.public_id = filename.split('.').slice(0, -1).join('.');
+        options.format = filename.split('.').pop();
+      }
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(

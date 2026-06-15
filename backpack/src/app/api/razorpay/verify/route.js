@@ -70,10 +70,15 @@ export async function POST(req) {
     let itineraryBuffer;
     try {
       if (trip?.itineraryPdf) {
-        // itineraryPdf is stored as a base64 data URI: "data:application/pdf;base64,..."
-        const base64Data = trip.itineraryPdf.split(',')[1];
-        if (base64Data) {
-          itineraryBuffer = Buffer.from(base64Data, 'base64');
+        if (trip.itineraryPdf.startsWith('http')) {
+          const res = await fetch(trip.itineraryPdf);
+          const arrayBuffer = await res.arrayBuffer();
+          itineraryBuffer = Buffer.from(arrayBuffer);
+        } else {
+          const base64Data = trip.itineraryPdf.split(',')[1];
+          if (base64Data) {
+            itineraryBuffer = Buffer.from(base64Data, 'base64');
+          }
         }
       }
     } catch (err) {

@@ -19,8 +19,11 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const resourceType = isPdf ? 'raw' : 'auto';
+
     // Upload to a general folder, e.g., 'backpack_general'
-    const cloudResult = await uploadToCloudinary(buffer, 'backpack_general', 'auto', file.name);
+    const cloudResult = await uploadToCloudinary(buffer, 'backpack_general', resourceType, file.name);
 
     return NextResponse.json({ url: cloudResult.secure_url }, { status: 201 });
   } catch (error) {
