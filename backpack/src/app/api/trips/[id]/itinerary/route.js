@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import dbConnect from '@/lib/db';
+import connectDB from '@/lib/mongodb';
 import Trip from '@/models/Trip';
 
 export async function GET(request, { params }) {
@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
     const { id } = await params;
     const trip = await Trip.findById(id).select('itineraryPdf title');
 
