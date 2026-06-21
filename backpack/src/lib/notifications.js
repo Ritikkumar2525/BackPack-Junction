@@ -31,8 +31,11 @@ const getRandomQuote = () => travelQuotes[Math.floor(Math.random() * travelQuote
 
 export async function sendBookingEmail(booking, trip, invoicePdfBuffer, itineraryPdfBuffer) {
   try {
+    console.log(`📧 sendBookingEmail called — SMTP_USER=${process.env.SMTP_USER ? 'SET' : 'MISSING'}, SMTP_PASSWORD=${process.env.SMTP_PASSWORD ? 'SET' : 'MISSING'}`);
+    console.log(`📧 Invoice buffer: ${invoicePdfBuffer?.length || 0} bytes, Itinerary buffer: ${itineraryPdfBuffer?.length || 0} bytes`);
+    
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      console.log("SMTP credentials missing. Skipping email.");
+      console.error("❌ SMTP credentials missing. Cannot send email. Check Vercel env vars.");
       return;
     }
 
@@ -328,7 +331,7 @@ export async function sendWhatsAppConfirmation(booking, trip) {
 }
 
 // Send email to admin when new booking is received
-export async function sendAdminNotification(booking, trip) {
+export async function sendAdminNotification(booking, trip, invoicePdfBuffer, itineraryPdfBuffer) {
   try {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) return;
 
@@ -353,6 +356,12 @@ export async function sendAdminNotification(booking, trip) {
           <p style="color:#888;font-size:12px;">Login to admin panel to manage this booking.</p>
         </div>
       `,
+      attachments: (() => {
+        const att = [];
+        if (invoicePdfBuffer) att.push({ filename: `Invoice_${booking.bookingId}.pdf`, content: invoicePdfBuffer });
+        if (itineraryPdfBuffer) att.push({ filename: `Itinerary_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`, content: itineraryPdfBuffer });
+        return att;
+      })()
     };
 
     await transporter.sendMail(mailOptions);

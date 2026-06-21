@@ -62,16 +62,19 @@ export async function POST(req) {
     let pdfBuffer;
     try {
       pdfBuffer = await generateInvoicePDF(booking, trip);
+      console.log(`✅ Invoice PDF generated: ${pdfBuffer?.length || 0} bytes`);
     } catch (err) {
-      console.error("PDF Generation failed:", err);
+      console.error("❌ PDF Generation failed:", err);
     }
 
     // Extract itinerary PDF from trip if available
     let itineraryBuffer;
     try {
       if (trip?.itineraryPdf) {
+        console.log(`📄 Itinerary PDF source: ${trip.itineraryPdf.substring(0, 50)}...`);
         if (trip.itineraryPdf.startsWith('http')) {
           const res = await fetch(trip.itineraryPdf);
+          console.log(`📄 Itinerary fetch status: ${res.status}`);
           const arrayBuffer = await res.arrayBuffer();
           itineraryBuffer = Buffer.from(arrayBuffer);
         } else {
@@ -80,16 +83,21 @@ export async function POST(req) {
             itineraryBuffer = Buffer.from(base64Data, 'base64');
           }
         }
+        console.log(`✅ Itinerary buffer: ${itineraryBuffer?.length || 0} bytes`);
+      } else {
+        console.log("ℹ️ No itinerary PDF on this trip");
       }
     } catch (err) {
-      console.error("Itinerary PDF extraction failed:", err);
+      console.error("❌ Itinerary PDF extraction failed:", err);
     }
 
     // Send email notification with both PDFs
     try {
+      console.log(`📧 Sending booking email to ${booking.travellers[0]?.emailAddress}...`);
       await sendBookingEmail(booking, trip, pdfBuffer, itineraryBuffer);
+      console.log("✅ sendBookingEmail completed");
     } catch (err) {
-      console.error("Email sending failed:", err);
+      console.error("❌ Email sending failed:", err);
     }
 
     // Send WhatsApp notification
@@ -101,7 +109,7 @@ export async function POST(req) {
 
     // Notify admin
     try {
-      await sendAdminNotification(booking, trip);
+      await sendAdminNotification(booking, trip, pdfBuffer, itineraryBuffer);
     } catch (err) {
       console.error("Admin notification failed:", err);
     }

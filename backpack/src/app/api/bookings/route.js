@@ -75,6 +75,12 @@ export async function POST(request) {
       return NextResponse.json({ error: "Trip not found" }, { status: 404 });
     }
 
+    const now = Date.now();
+    const startDateTime = trip.startDate ? new Date(trip.startDate).getTime() : now + 86400000;
+    if (startDateTime <= now) {
+      return NextResponse.json({ error: "Bookings are closed. This trip has already started or completed." }, { status: 400 });
+    }
+
     // Calculate available seats dynamically
     const bookings = await Booking.aggregate([
       { $match: { 

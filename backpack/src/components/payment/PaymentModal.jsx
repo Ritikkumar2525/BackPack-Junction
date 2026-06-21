@@ -72,9 +72,9 @@ export default function PaymentModal({ isOpen, onClose, method, amount, totalAmo
 
   const bankDetails = {
     name: "Backpack Junction",
-    account: "XXXXXXXXXXXX",
-    ifsc: "XXXX0XXXXXX",
-    bank: "XXXX Bank",
+    account: "42118606198",
+    ifsc: "SBIN0003616",
+    bank: "State Bank of india",
     upi: "ritikrajkeshari0-1@oksbi",
   };
 

@@ -73,6 +73,28 @@ export default function TripDetailsPage({ params }) {
   const hasPickup = trip.pickupLocations?.filter(Boolean).length > 0;
   const hasDrop = trip.dropLocations?.filter(Boolean).length > 0;
 
+  const now = Date.now();
+  const startDateTime = trip.startDate ? new Date(trip.startDate).getTime() : now + 86400000;
+  const endDateTime = trip.endDate ? new Date(trip.endDate).getTime() : startDateTime + (86400000 * 5);
+
+  const isCompleted = endDateTime <= now;
+  const isStarted = startDateTime <= now && endDateTime > now;
+  const isSoldOut = available <= 0;
+
+  let canBook = true;
+  let statusBadge = null;
+
+  if (isCompleted) {
+    canBook = false;
+    statusBadge = "Trip Completed";
+  } else if (isStarted) {
+    canBook = false;
+    statusBadge = "Trip Started";
+  } else if (isSoldOut) {
+    canBook = false;
+    statusBadge = "Sold Out";
+  }
+
   const shareTrip = () => {
     if (navigator.share) navigator.share({ title: trip.title, url: window.location.href });
     else { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); }
@@ -321,9 +343,15 @@ export default function TripDetailsPage({ params }) {
             </div>
 
             {/* CTA */}
-            <Link href={`/dashboard/book-trip?tripId=${trip._id}`} className="w-full py-4 bg-gradient-to-r from-[#C67A3C] to-[#D4842A] text-white font-bold rounded-xl shadow-[0_8px_20px_rgba(198,122,60,0.35)] hover:shadow-[0_8px_25px_rgba(198,122,60,0.55)] hover:scale-[1.02] transition-all flex items-center justify-center gap-2 mb-3">
-              Confirm Your Seat →
-            </Link>
+            {canBook ? (
+              <Link href={`/dashboard/book-trip?tripId=${trip._id}`} className="w-full py-4 bg-gradient-to-r from-[#C67A3C] to-[#D4842A] text-white font-bold rounded-xl shadow-[0_8px_20px_rgba(198,122,60,0.35)] hover:shadow-[0_8px_25px_rgba(198,122,60,0.55)] hover:scale-[1.02] transition-all flex items-center justify-center gap-2 mb-3">
+                Confirm Your Seat →
+              </Link>
+            ) : (
+              <div className="w-full py-3 px-4 bg-white/5 text-red-400 font-bold rounded-xl border border-white/5 text-center mb-3 cursor-not-allowed text-sm">
+                {statusBadge === "Trip Started" ? "This trip has already started. New bookings are no longer available." : statusBadge}
+              </div>
+            )}
 
             <div className="flex gap-3">
               <a href={`tel:+918287054501`} className="flex-1 py-3 bg-white/5 text-cream font-semibold rounded-xl border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm">
@@ -347,9 +375,15 @@ export default function TripDetailsPage({ params }) {
           <p className="text-[9px] text-cream/50 uppercase tracking-wider font-bold mb-0.5">Total Price</p>
           <span className="text-lg font-bold text-burnt-orange">{price}</span>
         </div>
-        <Link href={`/dashboard/book-trip?tripId=${trip._id}`} className="px-6 py-3 bg-gradient-to-r from-[#C67A3C] to-[#D4842A] text-white font-bold rounded-xl shadow-lg text-sm">
-          Book Now
-        </Link>
+        {canBook ? (
+          <Link href={`/dashboard/book-trip?tripId=${trip._id}`} className="px-6 py-3 bg-gradient-to-r from-[#C67A3C] to-[#D4842A] text-white font-bold rounded-xl shadow-lg text-sm">
+            Book Now
+          </Link>
+        ) : (
+          <div className="px-6 py-3 bg-white/5 text-cream/40 font-bold rounded-xl border border-white/5 text-sm cursor-not-allowed">
+            {statusBadge}
+          </div>
+        )}
       </div>
 
       <Footer />
